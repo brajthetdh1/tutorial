@@ -41,8 +41,6 @@
     <div class="flex flex-col px-4 py-2 space-y-2">
       <a href="index.html" class="hover:underline">Home</a>
       <a href="aws.html" class="hover:underline">AWS</a>
-      <a href="about.html" class="hover:underline">About</a>
-      <a href="tutorials/lesson1.html" class="hover:underline">Lesson 1</a>
     </div>
   </nav>
 
@@ -65,7 +63,6 @@
       <h2 class="text-3xl font-semibold mb-4">Introduction to AWS</h2>
       <p class="mb-4 text-lg">Amazon Web Services (AWS) is a cloud computing platform that provides a wide range of services including computing power, storage options, and databases. AWS is widely used in real-world applications and interviews.</p>
       <p class="mb-4">In this guide, you will learn how to start AWS services and get prepared for interview questions.</p>
-      <img src="images/aws-architecture.png" alt="AWS Architecture Diagram" class="w-full max-w-xl mx-auto rounded shadow mb-4">
     </section>
 
     <!-- Section 2: AWS Setup & Launch Steps -->
@@ -84,6 +81,12 @@
           <li>Launch instance and download key pair (.pem).</li>
           <li>Connect via terminal: <code>ssh -i "key.pem" ec2-user@public-ip</code></li>
         </ol>
+
+        <p class="mt-2">
+        <a href="aws/ec2.html" class="inline-block mt-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">
+          Learn EC2 Setup in Detail
+        </a>
+      </p>
       </article>
 
       <article class="mb-6">
@@ -140,33 +143,6 @@
 
 
 
-
-
-    <section id="ec2-setup" class="bg-white rounded-lg shadow p-6 mb-6">
-  <h2 class="text-2xl font-semibold mb-4">EC2: Launch an Instance</h2>
-
-  <p class="mb-4 text-gray-700">
-    Follow these steps to launch a new EC2 instance:
-  </p>
-
-  <ol class="list-decimal list-inside space-y-2 text-gray-700">
-    <li>Log in to your <strong>AWS Management Console</strong>.</li>
-    <li>Go to the <strong>EC2 Dashboard</strong> → Click <strong>Launch Instance</strong>.</li>
-    <li>Choose an <strong>Amazon Machine Image (AMI)</strong>, e.g., Ubuntu or Amazon Linux.</li>
-    <li>Select an <strong>Instance Type</strong> (t2.micro is Free Tier eligible).</li>
-    <li>Configure instance details like network, subnet, and auto-assign IP.</li>
-    <li>Add storage as required (default is usually 8GB).</li>
-    <li>Configure the <strong>Security Group</strong> (allow SSH port 22 for remote access).</li>
-    <li>Review and launch the instance → download the key pair (.pem) file.</li>
-    <li>Connect to your EC2 instance via terminal: 
-      <code class="bg-gray-100 p-1 rounded">ssh -i "key.pem" ec2-user@your-public-ip</code>
-    </li>
-  </ol>
-
-  <div class="mt-4">
-    <img src="images/ec2-launch.png" alt="EC2 Launch Instance Screenshot" class="w-full max-w-lg mx-auto rounded shadow">
-  </div>
-</section>
 
 
 

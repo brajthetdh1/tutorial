@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS Tutorial & Interview Guide</title>
+  <meta name="description" content="Learn AWS step by step: setup EC2, S3, Lambda, RDS, and review interview questions.">
+  <meta name="keywords" content="AWS, EC2, S3, Lambda, RDS, AWS tutorial, AWS interview questions, cloud computing">
+  <meta name="author" content="Your Name">
+  <link rel="icon" href="favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+  <!-- Header -->
+<header class="bg-indigo-600 text-white fixed top-0 w-full z-50 shadow">
+  <div class="container mx-auto flex justify-between items-center p-4">
+    <!-- Logo / Title -->
+    <h1 class="text-2xl font-bold">My Tutorials</h1>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex md:space-x-6 items-center">
+      <a href="../index.html" class="hover:underline whitespace-nowrap">Home</a>
+      <a href="../aws.html" class="hover:underline whitespace-nowrap">AWS</a>
+    </nav>
+
+    <!-- Mobile Hamburger -->
+    <div class="md:hidden">
+      <button id="menu-btn" class="focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <nav id="menu" class="hidden md:hidden bg-indigo-500">
+    <div class="flex flex-col px-4 py-2 space-y-2">
+      <a href="../index.html" class="hover:underline whitespace-nowrap">Home</a>
+      <a href="../aws.html" class="hover:underline whitespace-nowrap">AWS</a>
+    </div>
+  </nav>
+
+  <!-- Script for mobile toggle -->
+  <script>
+    const btn = document.getElementById('menu-btn');
+    const menu = document.getElementById('menu');
+
+    btn.addEventListener('click', () => {
+      menu.classList.toggle('hidden');
+    });
+  </script>
+</header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto mt-24 p-4 space-y-10">
+
+
+
+
+    <section id="ec2-setup" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">EC2: Launch an Instance</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EC2 (Elastic Compute Cloud) lets you run virtual servers in the cloud. Follow these steps to launch your first instance:
+  </p>
+
+  <ol class="list-decimal list-inside space-y-4 text-gray-700">
+    
+    <li>
+      <strong>Log in to AWS Management Console:</strong> 
+      <p class="ml-4">Visit <a href="https://aws.amazon.com/console/" target="_blank" class="text-indigo-600 underline">AWS Console</a> and log in with your AWS account credentials. Ensure you are in the correct region where you want to deploy your EC2 instance.</p>
+    </li>
+
+    <li>
+      <strong>Go to EC2 Dashboard → Launch Instance:</strong>
+      <p class="ml-4">From the AWS Services menu, select <strong>EC2</strong>. In the EC2 Dashboard, click on <strong>Launch Instance</strong>. This will start the EC2 wizard to create a new virtual server.</p>
+    </li>
+
+    <li>
+      <strong>Choose an Amazon Machine Image (AMI):</strong>
+      <p class="ml-4">An AMI is a pre-configured operating system template. You can select Ubuntu, Amazon Linux, or other AMIs. Choose one based on your application requirements. For beginners, Amazon Linux 2 or Ubuntu 22.04 is recommended.</p>
+    </li>
+
+    <li>
+      <strong>Select Instance Type:</strong>
+      <p class="ml-4">Instance types define the CPU, memory, and network performance. For free-tier eligible users, <strong>t2.micro</strong> is sufficient. If you need more resources, choose a larger instance type accordingly.</p>
+    </li>
+
+    <li>
+      <strong>Configure Instance Details:</strong>
+      <p class="ml-4">Here you can set the number of instances, network, subnet, auto-assign public IP, and IAM role. Leave default settings for a simple setup, but ensure <strong>Auto-assign Public IP</strong> is enabled to connect via SSH.</p>
+    </li>
+
+    <li>
+      <strong>Add Storage:</strong>
+      <p class="ml-4">By default, AWS provides 8GB of storage. You can increase this depending on your application needs. Choose SSD for better performance.</p>
+    </li>
+
+    <li>
+      <strong>Configure Security Group:</strong>
+      <p class="ml-4">Security groups act as virtual firewalls. Allow SSH (port 22) so you can connect to your server. You can also allow HTTP (port 80) or HTTPS (port 443) if hosting a web app. Restrict access to your IP for better security.</p>
+    </li>
+
+    <li>
+      <strong>Review and Launch:</strong>
+      <p class="ml-4">Check all your settings. Click <strong>Launch</strong> and select an existing key pair or create a new one. Download the <strong>.pem</strong> key file—it’s required to connect to your EC2 instance.</p>
+    </li>
+
+    <li>
+      <strong>Connect to your EC2 Instance:</strong>
+      <p class="ml-4">Use the downloaded key pair to connect via SSH. Set permissions on the key file and connect:</p>
+      <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+chmod 400 key.pem
+ssh -i "key.pem" ec2-user@your-public-ip
+      </pre>
+      <p class="ml-4">Replace <code>your-public-ip</code> with the public IPv4 address of your EC2 instance.</p>
+    </li>
+
+  </ol>
+
+  <div class="mt-6">
+    <img src="images/ec2-launch.png" alt="EC2 Launch Instance Screenshot" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-configure" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Configure Instance Details</h2>
+
+  <p class="mb-4 text-gray-700">
+    This step lets you define how your EC2 instance behaves in the network and environment. Here’s what each option means:
+  </p>
+
+  <ul class="list-disc list-inside space-y-3 text-gray-700">
+    <li>
+      <strong>Number of Instances:</strong>
+      <p class="ml-4">Set how many EC2 instances you want to launch. For beginners, leave it as <code>1</code>.</p>
+    </li>
+
+    <li>
+      <strong>Network:</strong>
+      <p class="ml-4">Select the Virtual Private Cloud (VPC) in which the instance will run. The default VPC is suitable for most cases.</p>
+    </li>
+
+    <li>
+      <strong>Subnet:</strong>
+      <p class="ml-4">Choose a subnet within your selected VPC. Subnets determine the availability zone of your instance. For high availability, you can launch instances in different subnets.</p>
+    </li>
+
+    <li>
+      <strong>Auto-assign Public IP:</strong>
+      <p class="ml-4">Enable this to automatically assign a public IP so you can SSH into your instance. If disabled, you need a NAT or elastic IP for connectivity.</p>
+    </li>
+
+    <li>
+      <strong>IAM Role:</strong>
+      <p class="ml-4">Select an IAM role to grant permissions for your EC2 instance to access AWS services. For example, if your instance needs S3 access, attach a role with S3 permissions.</p>
+    </li>
+
+    <li>
+      <strong>Shutdown Behavior:</strong>
+      <p class="ml-4">Choose whether the instance stops or terminates when you shut it down. Usually, <strong>Stop</strong> is recommended for experimentation.</p>
+    </li>
+
+    <li>
+      <strong>Enable Termination Protection:</strong>
+      <p class="ml-4">Protects your instance from accidental termination. Enable this if you don’t want the instance deleted by mistake.</p>
+    </li>
+
+    <li>
+      <strong>Monitoring (CloudWatch):</strong>
+      <p class="ml-4">Enable detailed monitoring to track CPU, network, and disk usage every minute. Free tier includes basic monitoring.</p>
+    </li>
+
+    <li>
+      <strong>Advanced Details:</strong>
+      <p class="ml-4">Optionally, you can add user data scripts to run at launch, such as installing software or configuring services automatically.</p>
+    </li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-configure.png" alt="EC2 Configure Instance Details Screenshot" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-networking" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Networking & Public IP in EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    When launching an EC2 instance, networking configuration determines how your instance communicates with the internet, other AWS resources, and your local computer.
+  </p>
+
+  <ul class="list-disc list-inside space-y-3 text-gray-700">
+    
+    <li>
+      <strong>VPC (Virtual Private Cloud):</strong>
+      <p class="ml-4">
+        A VPC is your private network in AWS. Every EC2 instance must be launched inside a VPC. You can think of it as a virtual data center where you control IP ranges, subnets, and routing.
+      </p>
+    </li>
+
+    <li>
+      <strong>Subnet:</strong>
+      <p class="ml-4">
+        A subnet is a segment of your VPC. Each subnet resides in a specific availability zone. You can have public subnets (accessible from the internet) or private subnets (internal-only). Choosing a public subnet is necessary if your EC2 instance needs a public IP.
+      </p>
+    </li>
+
+    <li>
+      <strong>Auto-assign Public IP:</strong>
+      <p class="ml-4">
+        This option automatically assigns a public IPv4 address to your EC2 instance so it can communicate with the internet. This is crucial if you want to SSH into the instance or host a website.
+      </p>
+      <p class="ml-4 font-semibold">Key Points:</p>
+      <ul class="list-disc list-inside ml-8 space-y-1">
+        <li>If you don’t enable this, your instance will only have a private IP, accessible only within the VPC or through a VPN.</li>
+        <li>Public IPs are dynamic by default—they can change if the instance is stopped and started.</li>
+        <li>To have a static public IP, use an <strong>Elastic IP</strong> and attach it to your instance.</li>
+      </ul>
+    </li>
+
+    <li>
+      <strong>Private IP:</strong>
+      <p class="ml-4">
+        Every EC2 instance gets a private IP within the VPC subnet. Private IPs are used for internal communication between instances or services inside the VPC.
+      </p>
+    </li>
+
+    <li>
+      <strong>Security Groups:</strong>
+      <p class="ml-4">
+        Security groups act like a virtual firewall. If you assign a public IP, make sure the security group allows inbound SSH (port 22) or HTTP/HTTPS (ports 80/443) traffic as required.
+      </p>
+    </li>
+
+    <li>
+      <strong>Elastic IPs:</strong>
+      <p class="ml-4">
+        Elastic IPs are static public IPs that don’t change when you stop or start an instance. They are useful for production servers or when you need a permanent IP address for DNS records.
+      </p>
+    </li>
+
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-networking.png" alt="EC2 Networking and Public IP Diagram" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+
+  <p class="mt-4 text-gray-700">
+    <strong>Summary:</strong> If you want your EC2 instance to be accessible from the internet, launch it in a public subnet and enable <strong>Auto-assign Public IP</strong> or attach an Elastic IP. Otherwise, your instance will only be reachable internally within AWS.
+  </p>
+</section>
+
+
+<section id="ec2-ip" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">EC2 Networking: Understanding Public and Private IPs</h2>
+
+  <p class="mb-4 text-gray-700">
+    Every EC2 instance you launch in AWS is assigned an IP address so that it can communicate with other resources. 
+    Understanding the difference between <strong>private IPs</strong>, <strong>public IPs</strong>, and <strong>Elastic IPs</strong> is critical for networking, security, and accessing your instance from the internet.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Private IP</h3>
+  <p class="mb-2 ml-4 text-gray-700">
+    A private IP is automatically assigned to your EC2 instance within the subnet of your Virtual Private Cloud (VPC). 
+    This IP is used for internal communication between instances within the same VPC or connected networks.
+  </p>
+  <p class="ml-4 text-gray-700">
+    <strong>Example:</strong> Your EC2 instance gets a private IP like <code class="bg-gray-100 p-1 rounded">10.0.1.25</code>. You can connect to other instances in the same VPC using this IP. 
+    However, you cannot reach this instance from the internet using the private IP.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">2. Public IP (Auto-assign)</h3>
+  <p class="mb-2 ml-4 text-gray-700">
+    When you enable <strong>Auto-assign Public IP</strong> while launching an instance, AWS automatically assigns a public IPv4 address to your instance. 
+    This allows the instance to communicate with the internet, which is necessary if you want to SSH into your server or host a web application.
+  </p>
+  <p class="ml-4 text-gray-700">
+    <strong>Example:</strong> Your instance gets a public IP like <code class="bg-gray-100 p-1 rounded">18.223.45.67</code>. You can connect from your local computer using:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm">
+ssh -i "my-key.pem" ec2-user@18.223.45.67
+  </pre>
+  <p class="ml-4 text-gray-700">
+    Note that auto-assigned public IPs are <strong>dynamic</strong>. If you stop and start the instance, AWS may assign a new public IP. Therefore, for production or consistent access, you might need an Elastic IP.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">3. Elastic IP (Static Public IP)</h3>
+  <p class="mb-2 ml-4 text-gray-700">
+    An Elastic IP (EIP) is a static public IPv4 address provided by AWS. Unlike the auto-assigned public IP, an Elastic IP does not change even if you stop and start your instance. 
+    Elastic IPs are especially useful for hosting websites, APIs, or any service where a fixed IP is required.
+  </p>
+  <p class="ml-4 text-gray-700">
+    <strong>Example:</strong> You allocate an Elastic IP <code class="bg-gray-100 p-1 rounded">3.210.12.34</code> and attach it to your EC2 instance. 
+    You can point your domain name (e.g., <code>mywebsite.com</code>) to this Elastic IP, ensuring consistent access even after instance restarts.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">Summary & Tips</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use <strong>private IPs</strong> for internal AWS communication between instances.</li>
+    <li>Enable <strong>Auto-assign Public IP</strong> only if you need internet access temporarily.</li>
+    <li>Use <strong>Elastic IPs</strong> for production or any service requiring a permanent public IP.</li>
+    <li>Always configure your security group to allow inbound traffic for SSH, HTTP, or HTTPS if using public IPs.</li>
+    <li>Remember: public IPs are reachable over the internet, so never expose sensitive services without proper security.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-networking.png" alt="EC2 Networking: Private IP, Public IP, Elastic IP" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-connect" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Connecting to Your EC2 Instance</h2>
+
+  <p class="mb-4 text-gray-700">
+    After launching your EC2 instance, the next step is to connect to it. AWS uses <strong>SSH (Secure Shell)</strong> for secure remote access. 
+    You will use the key pair (.pem file) you downloaded during instance creation.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">Step 1: Locate Your Key Pair</h3>
+  <p class="ml-4 text-gray-700">
+    Ensure that you have downloaded the key pair (e.g., <code class="bg-gray-100 p-1 rounded">my-key.pem</code>) while launching your EC2 instance. 
+    This file is required to authenticate your SSH connection.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">Step 2: Set Permissions on the Key</h3>
+  <p class="ml-4 text-gray-700">
+    On your local machine (Linux/Mac), open a terminal and run:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm">
+chmod 400 my-key.pem
+  </pre>
+  <p class="ml-4 text-gray-700">
+    This ensures that your private key file has the correct permissions. SSH will refuse to use a key that is publicly viewable.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">Step 3: Connect via SSH</h3>
+  <p class="ml-4 text-gray-700">
+    Find the <strong>Public IPv4 address</strong> of your instance from the EC2 Dashboard. Then connect using the SSH command:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm">
+ssh -i "my-key.pem" ec2-user@18.223.45.67
+  </pre>
+  <p class="ml-4 text-gray-700">
+    Replace <code>18.223.45.67</code> with your instance’s public IP. For Ubuntu AMIs, use <code>ubuntu</code> as the username:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm">
+ssh -i "my-key.pem" ubuntu@your-public-ip
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2">Step 4: Verify Connection</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>After running the SSH command, you should see a welcome message and command prompt of your EC2 instance.</li>
+    <li>Run <code>uname -a</code> or <code>uptime</code> to verify your instance is running correctly.</li>
+    <li>If connection fails, check:
+      <ul class="list-disc list-inside ml-6">
+        <li>Your security group allows inbound SSH (port 22).</li>
+        <li>The correct key pair (.pem) is used.</li>
+        <li>The public IP is correct.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2">Example Connection Flow</h3>
+  <p class="ml-4 text-gray-700">
+    <strong>Step-by-step:</strong>
+  </p>
+  <ol class="list-decimal list-inside ml-6 space-y-2 text-gray-700">
+    <li>Download key pair <code>my-key.pem</code> from AWS console.</li>
+    <li>Open terminal and run: <code>chmod 400 my-key.pem</code></li>
+    <li>Find public IP of instance: <code>18.223.45.67</code></li>
+    <li>Run SSH command: <code>ssh -i "my-key.pem" ec2-user@18.223.45.67</code></li>
+    <li>Access terminal prompt of EC2 and start managing your server!</li>
+  </ol>
+
+  <div class="mt-4">
+    <img src="images/ec2-connect.png" alt="Connecting to EC2 via SSH" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-storage" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">EC2 Storage: Understanding EBS and Instance Store</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EC2 instances require storage to save data, operating systems, and applications. AWS provides two main storage options:
+    <strong>EBS (Elastic Block Store)</strong> and <strong>Instance Store</strong>.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Elastic Block Store (EBS)</h3>
+  <p class="ml-4 mb-2 text-gray-700">
+    EBS provides persistent block-level storage for your EC2 instances. Data on EBS volumes remains intact even if the EC2 instance is stopped or terminated (unless you delete the volume). EBS volumes are like virtual hard drives attached to your instance.
+  </p>
+
+  <p class="ml-4 text-gray-700">
+    <strong>Key Features:</strong>
+  </p>
+  <ul class="list-disc list-inside ml-8 space-y-2 text-gray-700">
+    <li>Persistent storage — survives instance stop/start.</li>
+    <li>Supports snapshots for backups.</li>
+    <li>Choose volume type: SSD (gp3/gp2), HDD (st1/sc1) depending on performance and cost.</li>
+  </ul>
+
+  <h4 class="text-lg font-semibold mt-2 mb-1 ml-4">Example:</h4>
+  <p class="ml-6 text-gray-700">
+    When launching an EC2 instance, AWS automatically creates an 8 GB EBS volume attached as <code class="bg-gray-100 p-1 rounded">/dev/xvda</code> (root volume). You can add extra volumes:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-6">
+Volume Name: /dev/xvdb
+Size: 20 GB
+Type: gp3 (SSD)
+  </pre>
+  <p class="ml-6 text-gray-700">
+    This extra volume can be mounted inside the instance at <code class="bg-gray-100 p-1 rounded">/mnt/data</code> to store application data.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Instance Store (Ephemeral Storage)</h3>
+  <p class="ml-4 mb-2 text-gray-700">
+    Instance store provides temporary block-level storage physically attached to the host machine. This storage is **ephemeral**, meaning all data is lost if the instance stops, terminates, or fails.
+  </p>
+  <p class="ml-4 text-gray-700">
+    <strong>Use Case:</strong> Ideal for cache, temporary files, or data replicated elsewhere.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Connecting Storage to Your EC2 Instance</h3>
+  <p class="ml-4 text-gray-700">
+    After launching the instance and adding extra EBS volumes, you need to mount them inside your instance:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+# List available disks
+lsblk
+
+# Format new volume (example: /dev/xvdb)
+sudo mkfs -t ext4 /dev/xvdb
+
+# Create mount point
+sudo mkdir /mnt/data
+
+# Mount volume
+sudo mount /dev/xvdb /mnt/data
+
+# Make persistent (optional, add to /etc/fstab)
+echo '/dev/xvdb /mnt/data ext4 defaults,nofail 0 2' | sudo tee -a /etc/fstab
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">Summary & Tips</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Root volume is always an EBS volume.</li>
+    <li>Use EBS for persistent data; instance store only for temporary/cache data.</li>
+    <li>Snapshots of EBS volumes help in backup and disaster recovery.</li>
+    <li>Mount additional volumes to /mnt or any directory as required.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-storage.png" alt="EC2 Storage: EBS and Instance Store" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-storage-usage" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Using Storage in EC2: EBS and Instance Store</h2>
+
+  <p class="mb-4 text-gray-700">
+    When you launch an EC2 instance, it requires storage for the operating system, applications, and data. AWS provides two types of storage:
+    <strong>Elastic Block Store (EBS)</strong> for persistent storage and <strong>Instance Store</strong> for temporary storage. This section explains how to use storage effectively with examples.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Elastic Block Store (EBS)</h3>
+  <p class="ml-4 mb-2 text-gray-700">
+    EBS provides persistent block-level storage volumes. Data on EBS volumes remains intact even if you stop or terminate the instance (unless the volume is deleted). EBS volumes behave like virtual hard drives attached to your EC2 instance.
+  </p>
+
+  <ul class="list-disc list-inside ml-8 space-y-2 text-gray-700">
+    <li>Root volume is automatically created when launching an instance (e.g., 8 GB gp3 SSD).</li>
+    <li>Additional volumes can be attached for storing application data, logs, or backups.</li>
+    <li>Supports snapshots for backup and disaster recovery.</li>
+    <li>Volume types: SSD (gp2, gp3) for performance, HDD (st1, sc1) for cost-effective storage.</li>
+  </ul>
+
+  <h4 class="text-lg font-semibold mt-2 mb-1 ml-4">Example: Adding an EBS Volume</h4>
+  <p class="ml-6 text-gray-700">
+    Suppose you want to add a 20 GB SSD volume for application data:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-6">
+Volume Name: /dev/xvdb
+Size: 20 GB
+Type: gp3 (SSD)
+  </pre>
+  <p class="ml-6 text-gray-700">
+    You can attach this volume to your instance and mount it to a directory like <code class="bg-gray-100 p-1 rounded">/mnt/data</code>.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Instance Store (Ephemeral Storage)</h3>
+  <p class="ml-4 mb-2 text-gray-700">
+    Instance store provides temporary block storage physically attached to the host machine. It is ephemeral — all data is lost when the instance stops, terminates, or fails.
+  </p>
+  <p class="ml-4 text-gray-700">
+    Use cases: cache, temporary files, swap space, or high-speed temporary storage.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Mounting and Using EBS Volumes</h3>
+  <p class="ml-4 text-gray-700">
+    After attaching an EBS volume to your EC2 instance, you need to format and mount it to use it.
+  </p>
+
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+# List attached volumes
+lsblk
+
+# Format new volume (example: /dev/xvdb)
+sudo mkfs -t ext4 /dev/xvdb
+
+# Create a mount point
+sudo mkdir /mnt/data
+
+# Mount the volume
+sudo mount /dev/xvdb /mnt/data
+
+# Verify mounted volumes
+df -h
+
+# Make mounting persistent (edit /etc/fstab)
+echo '/dev/xvdb /mnt/data ext4 defaults,nofail 0 2' | sudo tee -a /etc/fstab
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Practical Example: Storing Application Data</h3>
+  <p class="ml-4 text-gray-700">
+    Suppose you are running a web application that generates log files. You can mount an additional EBS volume to <code class="bg-gray-100 p-1 rounded">/mnt/data</code> and store logs there:
+  </p>
+
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+# Navigate to data directory
+cd /mnt/data
+
+# Create log folder
+mkdir app-logs
+
+# Save logs
+echo "Server started at $(date)" >> app-logs/server.log
+  </pre>
+  <p class="ml-4 text-gray-700">
+    The logs are stored on the EBS volume, so even if you stop and restart the EC2 instance, your data remains intact.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Summary & Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **EBS volumes** for persistent storage like databases, application data, and backups.</li>
+    <li>Use **instance store** for temporary storage like cache or high-speed processing files.</li>
+    <li>Always **format and mount volumes** after attaching them to the instance.</li>
+    <li>Use **snapshots** to backup critical EBS volumes.</li>
+    <li>Mount volumes to directories like <code>/mnt/data</code> or <code>/var/www</code> for organized storage.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-storage-usage.png" alt="EC2 Storage Usage: EBS and Instance Store Example" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-security" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">EC2 Security Groups: Controlling Access</h2>
+
+  <p class="mb-4 text-gray-700">
+    Security Groups (SGs) in AWS act as **virtual firewalls** for your EC2 instances. They control inbound and outbound traffic, allowing only authorized connections. Each EC2 instance must be associated with at least one security group.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Key Concepts</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>
+      <strong>Inbound Rules:</strong> Define the traffic allowed **into the instance**. For example, SSH on port 22 or HTTP on port 80.
+    </li>
+    <li>
+      <strong>Outbound Rules:</strong> Define the traffic allowed **out from the instance**. By default, all outbound traffic is allowed.
+    </li>
+    <li>
+      <strong>Stateful Rules:</strong> Security groups are stateful. If you allow inbound traffic on a port, the response is automatically allowed outbound.
+    </li>
+    <li>
+      <strong>Multiple SGs:</strong> An instance can have multiple security groups, and rules are aggregated.
+    </li>
+    <li>
+      <strong>Source/Destination:</strong> You can restrict access by IP (e.g., `203.0.113.5/32`) or by another security group.
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Example: Allowing SSH and HTTP Access</h3>
+  <p class="ml-4 text-gray-700">
+    Suppose you launch an EC2 instance and want:
+  </p>
+  <ul class="list-disc list-inside ml-6 space-y-2 text-gray-700">
+    <li>SSH access from your local machine only.</li>
+    <li>HTTP access for everyone on the internet.</li>
+  </ul>
+
+  <h4 class="text-lg font-semibold mt-2 mb-1 ml-4">Inbound Rules</h4>
+  <table class="table-auto border border-gray-300 ml-4 mb-4">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="px-4 py-2 border">Type</th>
+        <th class="px-4 py-2 border">Protocol</th>
+        <th class="px-4 py-2 border">Port Range</th>
+        <th class="px-4 py-2 border">Source</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="bg-white">
+        <td class="px-4 py-2 border">SSH</td>
+        <td class="px-4 py-2 border">TCP</td>
+        <td class="px-4 py-2 border">22</td>
+        <td class="px-4 py-2 border">203.0.113.5/32 (your IP)</td>
+      </tr>
+      <tr class="bg-white">
+        <td class="px-4 py-2 border">HTTP</td>
+        <td class="px-4 py-2 border">TCP</td>
+        <td class="px-4 py-2 border">80</td>
+        <td class="px-4 py-2 border">0.0.0.0/0 (anywhere)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h4 class="text-lg font-semibold mt-2 mb-1 ml-4">Outbound Rules (Default)</h4>
+  <p class="ml-4 text-gray-700">
+    By default, all outbound traffic is allowed:
+  </p>
+  <ul class="list-disc list-inside ml-6 space-y-1 text-gray-700">
+    <li>Protocol: All traffic</li>
+    <li>Port Range: All ports</li>
+    <li>Destination: 0.0.0.0/0 (anywhere)</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Attaching a Security Group to an EC2 Instance</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to the EC2 Dashboard and select your instance.</li>
+    <li>Click on the <strong>Security</strong> tab → <strong>Security Groups</strong>.</li>
+    <li>Choose an existing security group or create a new one.</li>
+    <li>Add inbound rules for SSH, HTTP, or HTTPS as needed.</li>
+    <li>Save the security group and ensure it is attached to the instance.</li>
+  </ol>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Scenario</h3>
+  <p class="ml-4 text-gray-700">
+    You want to run a web server on EC2 accessible globally and allow only your IP to SSH:
+  </p>
+  <ul class="list-disc list-inside ml-6 space-y-2 text-gray-700">
+    <li>Inbound Rule: SSH TCP port 22 → Source: <code>203.0.113.5/32</code></li>
+    <li>Inbound Rule: HTTP TCP port 80 → Source: <code>0.0.0.0/0</code></li>
+    <li>Outbound Rule: All traffic allowed (default)</li>
+  </ul>
+  <p class="ml-4 text-gray-700">
+    Now you can connect via SSH and serve web pages to anyone on the internet while keeping your SSH access restricted.
+  </p>
+
+  <div class="mt-4">
+    <img src="images/ec2-security-group.png" alt="EC2 Security Group Example" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Restrict SSH access to specific IPs only.</li>
+    <li>Do not allow 0.0.0.0/0 for sensitive ports like SSH in production.</li>
+    <li>Use separate security groups for different types of access (web, database, admin).</li>
+    <li>Regularly review and remove unused rules or groups.</li>
+  </ul>
+</section>
+
+
+
+
+
+
+
+   
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-gray-600 mt-10 p-6 text-center">
+    <p>&copy; 2025 My Tutorials. All rights reserved.</p>
+  </footer>
+
+ 
+</body>
+</html>
