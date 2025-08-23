@@ -12,30 +12,50 @@
 </head>
 <body class="bg-gray-50 font-sans text-gray-800">
 
-  <!-- Header -->
-  <header class="bg-indigo-600 text-white fixed w-full z-50 shadow">
-    <div class="container mx-auto flex justify-between items-center p-4">
-      <h1 class="text-2xl font-bold">My Tutorials</h1>
+<!-- Header -->
+<header class="bg-indigo-600 text-white fixed top-0 w-full z-50 shadow">
+  <div class="container mx-auto flex justify-between items-center p-4">
+    <!-- Logo / Title -->
+    <h1 class="text-2xl font-bold">My Tutorials</h1>
 
-      <!-- Hamburger for mobile -->
-      <div class="md:hidden">
-        <button id="menu-btn" class="focus:outline-none">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M4 6h16M4 12h16M4 18h16"></path>
-          </svg>
-        </button>
-      </div>
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex md:space-x-6 items-center">
+      <a href="index.html" class="hover:underline whitespace-nowrap">Home</a>
+      <a href="aws.html" class="hover:underline whitespace-nowrap">AWS</a>
+    </nav>
 
-      <!-- Navigation -->
-      <nav id="menu" class="hidden md:flex md:space-x-4 overflow-x-auto">
-        <a href="index.html" class="hover:underline whitespace-nowrap">Home</a>
-        <a href="aws.html" class="hover:underline whitespace-nowrap">AWS</a>
-        
-      </nav>
+    <!-- Mobile Hamburger -->
+    <div class="md:hidden">
+      <button id="menu-btn" class="focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
     </div>
-  </header>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <nav id="menu" class="hidden md:hidden bg-indigo-500">
+    <div class="flex flex-col px-4 py-2 space-y-2">
+      <a href="index.html" class="hover:underline">Home</a>
+      <a href="aws.html" class="hover:underline">AWS</a>
+      <a href="about.html" class="hover:underline">About</a>
+      <a href="tutorials/lesson1.html" class="hover:underline">Lesson 1</a>
+    </div>
+  </nav>
+
+  <!-- Script for mobile toggle -->
+  <script>
+    const btn = document.getElementById('menu-btn');
+    const menu = document.getElementById('menu');
+
+    btn.addEventListener('click', () => {
+      menu.classList.toggle('hidden');
+    });
+  </script>
+</header>
 
   <!-- Main Content -->
   <main class="container mx-auto mt-24 p-4">
@@ -50,16 +70,6 @@
   <footer class="bg-gray-100 text-gray-600 mt-10 p-6 text-center">
     <p>&copy; 2025 My Tutorials. All rights reserved.</p>
   </footer>
-
-  <!-- Mobile Menu Script -->
-  <script>
-    const btn = document.getElementById('menu-btn');
-    const menu = document.getElementById('menu');
-
-    btn.addEventListener('click', () => {
-      menu.classList.toggle('hidden');
-    });
-  </script>
 
 </body>
 </html>
