@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS Tutorial & Interview Guide</title>
+  <meta name="description" content="Learn AWS step by step: setup EC2, S3, Lambda, RDS, and review interview questions.">
+  <meta name="keywords" content="AWS, EC2, S3, Lambda, RDS, AWS tutorial, AWS interview questions, cloud computing">
+  <meta name="author" content="Your Name">
+  <link rel="icon" href="favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+  <!-- Header -->
+  <header class="bg-indigo-600 text-white fixed w-full z-50 shadow">
+    <div class="container mx-auto flex justify-between items-center p-4">
+      <h1 class="text-2xl font-bold">My Tutorials</h1>
+
+      <!-- Hamburger for mobile -->
+      <div class="md:hidden">
+        <button id="menu-btn" class="focus:outline-none">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Navigation -->
+      <nav id="menu" class="hidden md:flex md:space-x-4 overflow-x-auto">
+        <a href="index.html" class="hover:underline whitespace-nowrap">Home</a>
+        <a href="aws.html" class="hover:underline whitespace-nowrap">AWS</a>
+        
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto mt-24 p-4 space-y-10">
+
+    <!-- Section 1: Introduction -->
+    <section id="intro">
+      <h2 class="text-3xl font-semibold mb-4">Introduction to AWS</h2>
+      <p class="mb-4 text-lg">Amazon Web Services (AWS) is a cloud computing platform that provides a wide range of services including computing power, storage options, and databases. AWS is widely used in real-world applications and interviews.</p>
+      <p class="mb-4">In this guide, you will learn how to start AWS services and get prepared for interview questions.</p>
+      <img src="images/aws-architecture.png" alt="AWS Architecture Diagram" class="w-full max-w-xl mx-auto rounded shadow mb-4">
+    </section>
+
+    <!-- Section 2: AWS Setup & Launch Steps -->
+    <section id="setup">
+      <h2 class="text-3xl font-semibold mb-4">AWS Setup & Launch Steps</h2>
+
+      <article class="mb-6">
+        <h3 class="text-2xl font-semibold mb-2">1. EC2 (Elastic Compute Cloud)</h3>
+        <ol class="list-decimal list-inside ml-4 space-y-1">
+          <li>Log in to AWS Management Console.</li>
+          <li>Go to <strong>EC2 Dashboard</strong> → Launch Instance.</li>
+          <li>Choose Amazon Machine Image (AMI) e.g., Ubuntu or Amazon Linux.</li>
+          <li>Select instance type (t2.micro for free tier).</li>
+          <li>Configure instance details & add storage.</li>
+          <li>Configure security group (allow SSH port 22).</li>
+          <li>Launch instance and download key pair (.pem).</li>
+          <li>Connect via terminal: <code>ssh -i "key.pem" ec2-user@public-ip</code></li>
+        </ol>
+      </article>
+
+      <article class="mb-6">
+        <h3 class="text-2xl font-semibold mb-2">2. S3 (Simple Storage Service)</h3>
+        <ol class="list-decimal list-inside ml-4 space-y-1">
+          <li>Go to S3 console → Create bucket.</li>
+          <li>Give a unique bucket name and select region.</li>
+          <li>Set permissions and access (public/private as needed).</li>
+          <li>Upload files and organize folders.</li>
+          <li>Enable static website hosting if needed.</li>
+        </ol>
+      </article>
+
+      <article class="mb-6">
+        <h3 class="text-2xl font-semibold mb-2">3. Lambda (Serverless)</h3>
+        <ol class="list-decimal list-inside ml-4 space-y-1">
+          <li>Go to Lambda console → Create function.</li>
+          <li>Select "Author from scratch" and choose runtime (Python, Node.js, etc.).</li>
+          <li>Configure permissions & trigger (e.g., API Gateway, S3).</li>
+          <li>Write function code or upload zip.</li>
+          <li>Test function using test events or API trigger.</li>
+        </ol>
+      </article>
+
+      <article class="mb-6">
+        <h3 class="text-2xl font-semibold mb-2">4. RDS (Relational Database Service)</h3>
+        <ol class="list-decimal list-inside ml-4 space-y-1">
+          <li>Go to RDS console → Create database.</li>
+          <li>Select engine (MySQL, PostgreSQL, etc.) and version.</li>
+          <li>Choose free tier template if available.</li>
+          <li>Set DB instance identifier, username & password.</li>
+          <li>Configure network & security group.</li>
+          <li>Launch database and connect using endpoint.</li>
+        </ol>
+      </article>
+    </section>
+
+    <!-- Section 3: AWS Interview Questions -->
+    <section id="interview">
+      <h2 class="text-3xl font-semibold mb-4">AWS Interview Questions</h2>
+      <ul class="list-disc ml-6 space-y-2">
+        <li>What is AWS and why is it used?</li>
+        <li>Explain the difference between EC2 and Lambda.</li>
+        <li>What is the difference between S3 and EBS?</li>
+        <li>How do security groups differ from NACLs?</li>
+        <li>Explain vertical and horizontal scaling in AWS.</li>
+        <li>What is IAM and why is it important?</li>
+        <li>How do you connect an EC2 instance to an RDS database?</li>
+        <li>What is AWS Free Tier?</li>
+        <li>How do you deploy a static website on S3?</li>
+        <li>What are CloudWatch metrics and alarms?</li>
+      </ul>
+    </section>
+
+
+
+
+
+
+
+
+
+    
+
+    <!-- Back to Home -->
+    <a href="index.html" class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition">Back to Home</a>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-gray-600 mt-10 p-6 text-center">
+    <p>&copy; 2025 My Tutorials. All rights reserved.</p>
+  </footer>
+
+  <!-- Mobile Menu Script -->
+  <script>
+    const btn = document.getElementById('menu-btn');
+    const menu = document.getElementById('menu');
+
+    btn.addEventListener('click', () => {
+      menu.classList.toggle('hidden');
+    });
+  </script>
+
+</body>
+</html>
