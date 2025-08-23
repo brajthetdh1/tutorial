@@ -672,6 +672,125 @@ echo "Server started at $(date)" >> app-logs/server.log
 
 
 
+<section id="ec2-java" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Using EC2 for Java Applications</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EC2 is a flexible and scalable cloud compute platform ideal for running Java applications. This section walks you through launching an EC2 instance, installing Java, and running a simple Java program.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Launch an EC2 Instance</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>Log in to AWS Management Console.</li>
+    <li>Go to <strong>EC2 Dashboard</strong> → <strong>Launch Instance</strong>.</li>
+    <li>Select an Amazon Machine Image (AMI):
+      <ul class="list-disc list-inside ml-6">
+        <li>Amazon Linux 2 (recommended for Java setup)</li>
+        <li>Ubuntu Server 20.04 LTS</li>
+      </ul>
+    </li>
+    <li>Select instance type (e.g., <code>t2.micro</code> for free tier).</li>
+    <li>Configure instance details, add storage, and assign a Security Group:
+      <ul class="list-disc list-inside ml-6">
+        <li>Allow SSH (port 22) from your IP</li>
+        <li>Optional: HTTP/HTTPS ports if you plan to run web apps</li>
+      </ul>
+    </li>
+    <li>Launch instance and download the key pair (<code>.pem</code> file).</li>
+  </ol>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Connect via SSH</h3>
+  <p class="ml-4 text-gray-700">
+    Open a terminal and connect to your EC2 instance using the public IP:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+chmod 400 my-key.pem
+ssh -i "my-key.pem" ec2-user@your-public-ip
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Install Java</h3>
+  <p class="ml-4 text-gray-700">
+    Amazon Linux 2 comes with Amazon Corretto (OpenJDK) available via yum:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+# Update packages
+sudo yum update -y
+
+# Install Java 17 (Corretto)
+sudo amazon-linux-extras enable corretto17
+sudo yum install -y java-17-amazon-corretto-devel
+
+# Verify installation
+java -version
+  </pre>
+  <p class="ml-4 text-gray-700">
+    You should see output similar to:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+openjdk version "17.0.8" 2023-07-18 LTS
+OpenJDK Runtime Environment Corretto-17.0.8.0.1
+OpenJDK 64-Bit Server VM Corretto-17.0.8.0.1
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Running a Sample Java Application</h3>
+  <p class="ml-4 text-gray-700">
+    Create a simple “Hello World” Java program:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+# Create a file HelloWorld.java
+nano HelloWorld.java
+
+# Paste the following code
+public class HelloWorld {
+    public static void main(String[] args) {
+        System.out.println("Hello from EC2!");
+    }
+}
+
+# Save and exit (Ctrl+O, Enter, Ctrl+X)
+  </pre>
+
+  <p class="ml-4 text-gray-700">
+    Compile and run the program:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded overflow-x-auto text-sm ml-4">
+# Compile
+javac HelloWorld.java
+
+# Run
+java HelloWorld
+
+# Output:
+Hello from EC2!
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Deploying a Java Web Application</h3>
+  <p class="ml-4 text-gray-700">
+    You can also deploy web applications using a Java server like Tomcat or Spring Boot:
+  </p>
+  <ul class="list-disc list-inside ml-6 space-y-2 text-gray-700">
+    <li>Install Tomcat or run a Spring Boot JAR: <code>java -jar myapp.jar</code></li>
+    <li>Ensure Security Group allows HTTP/HTTPS ports (80/443)</li>
+    <li>Access your application via public IP or domain name</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use Security Groups to restrict SSH access to your IP only.</li>
+    <li>Use Elastic IP for consistent access to your server.</li>
+    <li>Back up your data with EBS snapshots.</li>
+    <li>Keep your system updated: <code>sudo yum update -y</code></li>
+    <li>Use proper user roles and IAM policies for security.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-java.png" alt="EC2 for Java Example" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
 
 
 
