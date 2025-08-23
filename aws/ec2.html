@@ -3646,6 +3646,2079 @@ jedis.set("key", "value");
 
 
 
+<section id="ec2-high-availability" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Redesigning EC2 Web Application for High Availability</h2>
+
+  <p class="mb-4 text-gray-700">
+    Running a web application on a single Availability Zone (AZ) can lead to downtime during maintenance or AZ failures. High Availability (HA) design ensures continuous service with minimal disruption.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Multi-AZ Deployment</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy EC2 instances across **multiple AZs** within the same region.</li>
+    <li>Use **subnets in each AZ** and place instances behind a **load balancer**.</li>
+    <li>Benefits:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Maintenance in one AZ does not affect application availability.</li>
+        <li>Provides fault tolerance in case of AZ outage.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Elastic Load Balancer (ALB/NLB)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Place a **load balancer** in front of EC2 instances across multiple AZs.</li>
+    <li>Distributes traffic evenly and automatically routes around unhealthy instances.</li>
+    <li>Supports SSL termination, sticky sessions (if needed), and health checks.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Auto Scaling Groups</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Auto Scaling Groups (ASG)** to automatically launch or terminate EC2 instances based on demand.</li>
+    <li>Distribute ASG instances across multiple AZs for redundancy.</li>
+    <li>Example:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Minimum 2 instances (one in each AZ), desired 4 instances, maximum 6 instances.</li>
+        <li>Scaling triggered by CPU utilization or custom CloudWatch metrics.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Database High Availability</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Amazon RDS Multi-AZ deployment** for relational databases.</li>
+    <li>For NoSQL, use **DynamoDB global tables** for cross-AZ replication.</li>
+    <li>Ensures database availability during AZ failures or maintenance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Session Management for Statelessness</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Keep EC2 instances **stateless** by storing session data in **ElastiCache Redis** or **DynamoDB**.</li>
+    <li>Allows any instance to serve any request, simplifying scaling and failover.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Architecture</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Web application deployed across **2 AZs** with EC2 instances in each AZ.</li>
+    <li>ALB distributes traffic and performs health checks.</li>
+    <li>Auto Scaling Group ensures instance count matches traffic demand.</li>
+    <li>RDS Multi-AZ provides database redundancy.</li>
+    <li>Redis (ElastiCache) stores session state for stateless web servers.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Benefits of This HA Design</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Eliminates single points of failure.</li>
+    <li>Handles AZ failures or maintenance seamlessly.</li>
+    <li>Scales automatically with demand.</li>
+    <li>Improves user experience and reliability of web application.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ha-architecture.png" alt="EC2 High Availability Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-auto-scaling-troubleshoot" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Troubleshooting EC2 Auto Scaling Issues</h2>
+
+  <p class="mb-4 text-gray-700">
+    If your EC2 Auto Scaling Group (ASG) is not scaling as expected during peak traffic, there could be several reasons. Proper investigation involves checking metrics, scaling policies, instance health, and limits.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Check CloudWatch Metrics</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Verify the metric used for scaling (CPUUtilization, RequestCountPerTarget, or custom metrics).</li>
+    <li>Example: If scaling is based on CPU > 70%, ensure CPU metric actually exceeds the threshold during peak traffic.</li>
+    <li>Look for **metric delays** — metrics are not instantaneous, may have 1–5 minute granularity.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Verify Scaling Policies</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check if **Target Tracking, Step, or Simple scaling policies** are correctly configured.</li>
+    <li>Ensure **cooldown periods** are not too long, which could delay scaling actions.</li>
+    <li>Example: Step scaling with 300-second cooldown may delay additional instances even if traffic spikes rapidly.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Inspect ASG Limits</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check **minimum, desired, and maximum instance counts** in ASG configuration.</li>
+    <li>If max size is too low, ASG cannot launch enough instances during traffic spike.</li>
+    <li>Example: Desired = 4, max = 5 → during peak demand requiring 6 instances, scaling will be restricted.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Examine Instance Launch Issues</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check **EC2 launch templates/configurations** for errors (wrong AMI, instance type, or subnet). </li>
+    <li>Inspect **VPC, subnet, and IP availability** — instances may fail to launch if resources are exhausted.</li>
+    <li>Look at **CloudTrail events or ASG Activity History** to see failed launch attempts.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Check Health Checks</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Auto Scaling relies on **EC2 and ELB health checks** to mark instances as healthy or unhealthy.</li>
+    <li>Unhealthy instances may prevent new instances from being added correctly.</li>
+    <li>Verify health check grace period and ensure applications start quickly enough.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Resolve and Validate</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Adjust **scaling policies, cooldowns, and ASG limits** as needed.</li>
+    <li>Fix any **launch configuration issues** (AMI, instance type, subnet). </li>
+    <li>Test scaling by simulating load (e.g., using **stress tools or load testing scripts**).</li>
+    <li>Monitor **CloudWatch alarms and ASG Activity History** to confirm instances launch and terminate correctly.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Example</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>ASG configured for a web application:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Target CPUUtilization = 60%, min = 2, max = 6 instances.</li>
+        <li>Peak traffic spike: CPU = 80% → only 4 instances launched due to max size limit.</li>
+        <li>Resolution: Increase max size to 10, verify launch template and subnets, scaling triggers properly.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-auto-scaling-troubleshoot.png" alt="EC2 Auto Scaling Troubleshooting" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-stateless-stateful" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Designing Stateless vs Stateful Services on EC2 for Horizontal Scaling</h2>
+
+  <p class="mb-4 text-gray-700">
+    Horizontal scaling involves adding more EC2 instances to handle increased load. Designing your services as stateless or stateful has a major impact on how easily you can scale horizontally.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Stateless Services</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Do **not store client session or application state locally** on the EC2 instance.</li>
+    <li>Any instance can serve any request, allowing **easy addition/removal of instances**.</li>
+    <li>Use **shared storage** for stateful data:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Session storage: Redis (ElastiCache) or DynamoDB</li>
+        <li>File storage: S3 or EFS</li>
+      </ul>
+    </li>
+    <li>Example Java web app:
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+@RequestMapping("/cart")
+public Cart getCart(@RequestParam String userId) {
+    return redisService.getCart(userId); // Stateless EC2 instance, session in Redis
+}
+      </pre>
+    </li>
+    <li>Advantages:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Horizontal scaling is simple and fast</li>
+        <li>Fault tolerance: any instance can replace a failed one</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Stateful Services</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Store application or session state **locally on the EC2 instance**.</li>
+    <li>Horizontal scaling is challenging because:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Requests must route to the correct instance holding the state.</li>
+        <li>Sticky sessions may be needed at load balancer level.</li>
+        <li>Failover or instance replacement requires state replication.</li>
+      </ul>
+    </li>
+    <li>Example:
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+private Map<String, Cart> localCartStore = new HashMap<>();
+// Each instance holds its own cart data — not shared
+      </pre>
+    </li>
+    <li>Advantages:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Faster access for local state</li>
+        <li>Simpler for small-scale applications</li>
+      </ul>
+    </li>
+    <li>Disadvantages:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Harder to scale horizontally</li>
+        <li>Less resilient to instance failures</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Horizontal Scaling Design Principles</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Prefer **stateless EC2 instances** wherever possible.</li>
+    <li>Use **load balancers (ALB/NLB)** to distribute requests evenly across instances.</li>
+    <li>Store shared state externally:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Sessions: Redis, DynamoDB</li>
+        <li>Files: S3, EFS</li>
+        <li>Database: RDS Multi-AZ or Aurora Global DB</li>
+      </ul>
+    </li>
+    <li>For stateful services, implement **replication or sticky sessions**, but understand horizontal scaling limitations.</li>
+    <li>Combine with **Auto Scaling Groups** to dynamically add/remove EC2 instances during traffic spikes.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Architecture</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 web servers (stateless) behind an ALB.</li>
+    <li>Session data stored in ElastiCache Redis.</li>
+    <li>Database hosted on RDS Multi-AZ for HA.</li>
+    <li>S3 for static content (images, files) accessible by all EC2 instances.</li>
+    <li>Auto Scaling Group adds EC2 instances automatically during traffic peaks.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-stateless-stateful.png" alt="Stateless vs Stateful EC2 Horizontal Scaling" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-monolith-migration" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Migrating On-Prem Monolith to EC2 with Zero Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    Migrating a monolithic on-premises application to EC2 without downtime requires careful planning, replication of data, and gradual traffic cutover. Key strategies include lift-and-shift with load balancers, database replication, and blue-green deployments.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Assess Current Monolith</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Identify all application components, dependencies, and database schemas.</li>
+    <li>Determine which parts can be migrated first and which require careful sequencing.</li>
+    <li>Check for stateful components that may need externalization (sessions, caches, files).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Setup EC2 Environment</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Provision EC2 instances in **multiple AZs** behind an **Application Load Balancer (ALB)**.</li>
+    <li>Use **Auto Scaling Groups** for dynamic instance scaling during migration and after go-live.</li>
+    <li>Set up **security groups, VPC, subnets**, and other network configurations matching on-prem requirements.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Migrate Database with Replication</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy **RDS Multi-AZ** or EC2-hosted database in AWS.</li>
+    <li>Enable **continuous replication** from on-prem database to AWS using AWS Database Migration Service (DMS) or native replication.</li>
+    <li>Test replication lag and consistency to ensure zero data loss.</li>
+    <li>Example: On-prem MySQL → RDS MySQL using DMS with ongoing replication.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Externalize Stateful Components</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Move sessions to **ElastiCache Redis** or **DynamoDB**.</li>
+    <li>Move file storage to **S3** or **EFS**.</li>
+    <li>Ensure EC2 instances are **stateless**, enabling easy horizontal scaling.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Blue-Green Deployment Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Set up a **green environment** in EC2 matching current on-prem (blue environment).</li>
+    <li>Synchronize databases and storage between blue and green.</li>
+    <li>Switch traffic gradually from blue (on-prem) to green (EC2) using DNS or load balancer routing.</li>
+    <li>Rollback possible instantly if issues arise.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Test Thoroughly Before Cutover</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Run full application testing in green EC2 environment.</li>
+    <li>Check database consistency, application behavior, performance, and external integrations.</li>
+    <li>Simulate peak traffic to verify Auto Scaling and load balancer behavior.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Example Migration Flow</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Step 1: Replicate on-prem DB to AWS RDS.</li>
+    <li>Step 2: Deploy EC2 web/app servers in Auto Scaling Group.</li>
+    <li>Step 3: Externalize sessions to Redis and files to S3.</li>
+    <li>Step 4: Deploy blue-green environment and gradually redirect traffic.</li>
+    <li>Step 5: Monitor logs, metrics, and CloudWatch alarms for errors.</li>
+    <li>Step 6: Once traffic fully routed and stable, decommission on-prem servers.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-monolith-migration.png" alt="On-Prem Monolith to EC2 Zero Downtime Migration" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-network-optimization" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Handling EC2 Network Bandwidth Limits</h2>
+
+  <p class="mb-4 text-gray-700">
+    Network bandwidth limits on EC2 instances can cause application bottlenecks, slow response times, and degraded performance. Optimizing bandwidth usage and instance selection can improve performance while controlling costs.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Understand EC2 Network Performance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check **instance type network performance**: Low, Moderate, High, 10 Gbps, 25 Gbps, etc.</li>
+    <li>Use **Enhanced Networking (ENA)** for higher throughput and lower latency.</li>
+    <li>Example: t3.medium → “Moderate”, m5.large → “Up to 10 Gbps”, c6g.4xlarge → “25 Gbps”.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Vertical Scaling (Upgrade Instance Type)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Upgrade to instances with higher **network bandwidth capacity**.</li>
+    <li>Example: Move from t3.large to m5.xlarge for increased throughput.</li>
+    <li>Trade-off: Higher cost but fewer instances needed for same throughput.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Horizontal Scaling</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Distribute traffic across **multiple instances** behind an **ALB/NLB** to reduce per-instance bandwidth load.</li>
+    <li>Use **Auto Scaling Groups** to add more instances as traffic increases.</li>
+    <li>Benefit: Lower per-instance utilization, cost spread across smaller instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Optimize Network Usage</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **compression** for data transfers.</li>
+    <li>Use **CDN (CloudFront)** for static content to reduce EC2 bandwidth load.</li>
+    <li>Batch requests or use asynchronous processing to reduce simultaneous network usage.</li>
+    <li>Example: Offload images and static assets to S3 + CloudFront instead of serving from EC2.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Placement and Networking Optimizations</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Place EC2 instances in the same **AZ/subnet** as RDS, ElastiCache, or S3 endpoints to reduce cross-AZ bandwidth.</li>
+    <li>Use **VPC endpoints** to avoid internet routing for S3/DynamoDB traffic.</li>
+    <li>Enable **Enhanced Networking** and **ENA** for supported instance types for low latency and high throughput.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Web app is hitting 1 Gbps per instance limit.</li>
+    <li>Solution:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Switch to m5.xlarge instances (10 Gbps).</li>
+        <li>Deploy 2 instances in an Auto Scaling Group behind ALB.</li>
+        <li>Offload static content to S3 + CloudFront.</li>
+        <li>Monitor network metrics via CloudWatch to ensure limits are not exceeded.</li>
+      </ul>
+    </li>
+    <li>Outcome: Increased total throughput without over-provisioning, cost-efficient scaling.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-network-optimization.png" alt="EC2 Network Optimization" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-s3-secure-access" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Secure EC2 Access to S3 Without Storing Credentials</h2>
+
+  <p class="mb-4 text-gray-700">
+    Storing AWS credentials on EC2 instances is a security risk. AWS provides **IAM Roles for EC2** that allow instances to access S3 and other services securely without manually managing credentials.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create an IAM Role for EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to IAM console → Roles → Create role → Select **AWS service → EC2**.</li>
+    <li>Attach **S3 access policy** (e.g., `AmazonS3ReadOnlyAccess` or custom policy).</li>
+    <li>Name the role meaningfully (e.g., `EC2-S3-Access-Role`).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Attach Role to EC2 Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>When launching EC2, under **IAM role**, select the created role.</li>
+    <li>For running instances, attach role via **Actions → Security → Modify IAM role**.</li>
+    <li>No credentials are stored on the instance; AWS automatically provides temporary tokens.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Access S3 from EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **AWS SDK or CLI** to access S3 — no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` required.</li>
+    <li>Example using AWS CLI:
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+# List buckets
+aws s3 ls
+
+# Copy a file to S3
+aws s3 cp localfile.txt s3://my-bucket/
+      </pre>
+    </li>
+    <li>Example using Java SDK:
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                    .withRegion(Regions.US_EAST_1)
+                    .build();
+
+S3Object object = s3Client.getObject("my-bucket", "file.txt");
+      </pre>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Benefits of Using IAM Role</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>No credentials stored on the instance — reduces risk of leaks.</li>
+    <li>Temporary security credentials automatically rotated by AWS.</li>
+    <li>Easy to grant/revoke permissions by modifying the role policy.</li>
+    <li>Supports scaling — multiple EC2 instances can use the same role securely.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Architecture</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instance(s) in an Auto Scaling Group.</li>
+    <li>Attached IAM role with S3 read/write access.</li>
+    <li>Application on EC2 accesses S3 using SDK/CLI without storing credentials.</li>
+    <li>Optional: Use S3 bucket policies to restrict access to only instances with this IAM role.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-s3-iam-role.png" alt="EC2 Secure S3 Access via IAM Role" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+<section id="ec2-secure-ssh" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Detecting and Remediating Open Port 22 in Production</h2>
+
+  <p class="mb-4 text-gray-700">
+    Accidentally exposing SSH (port 22) to the world can lead to security breaches. Detecting and remediating this quickly is critical to maintaining security in production environments.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Detection</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **AWS Config** to continuously monitor security group rules.  
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+Rule example: Ensure no SG allows 0.0.0.0/0 on port 22
+      </pre>
+    </li>
+    <li>Enable **CloudWatch Alarms** for configuration changes in security groups.</li>
+    <li>Use **VPC Flow Logs** to monitor incoming traffic to port 22.</li>
+    <li>Leverage **AWS Trusted Advisor** and **Security Hub** for alerts about publicly open SSH.</li>
+    <li>Automated scanning tools (like **nmap** or **AWS Inspector**) to detect exposed ports:</li>
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+nmap -p 22 ec2-public-ip
+      </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Immediate Remediation</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Update the **security group** to restrict SSH access:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Allow only specific IP addresses (developer or office IP).</li>
+        <li>Example rule: `22/tcp` allowed from `203.0.113.10/32`</li>
+      </ul>
+    </li>
+    <li>Temporarily **remove public SSH access** if unsure of trusted IPs.</li>
+    <li>Enable **MFA and strong key-based authentication** on all EC2 instances.</li>
+    <li>Rotate SSH keys if compromise is suspected.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Prevention and Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **IAM Roles and Session Manager (SSM)** instead of direct SSH whenever possible.</li>
+    <li>Implement **AWS Config rules**: "Ensure no security group allows unrestricted SSH access."</li>
+    <li>Regularly audit security groups using automated scripts or AWS Config reports.</li>
+    <li>Enable **VPC Flow Logs** and monitor for unexpected SSH traffic.</li>
+    <li>Use **Infrastructure as Code (Terraform/CloudFormation)** to enforce secure SG rules.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Remediation Flow</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Detection: AWS Config alert triggers when SG 22/tcp is open to 0.0.0.0/0.</li>
+    <li>Immediate action: Modify SG to allow only specific IPs or remove rule entirely.</li>
+    <li>Verification: Use nmap or CloudWatch logs to confirm port 22 is no longer publicly accessible.</li>
+    <li>Prevent recurrence: Add Config rule enforcement and educate developers.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ssh-remediation.png" alt="EC2 SSH Port 22 Remediation" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+<section id="ec2-pci-compliance" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Deploying EC2 Instances in a PCI-Compliant Network</h2>
+
+  <p class="mb-4 text-gray-700">
+    PCI DSS compliance requires strict network segmentation, access controls, and monitoring. Deploying EC2 instances in a compliant environment requires careful VPC, subnet, and security group design.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. VPC Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a dedicated **VPC for PCI workloads** separate from other environments.</li>
+    <li>Enable **Flow Logs** for monitoring network traffic for compliance auditing.</li>
+    <li>Use **VPC endpoints** for S3/DynamoDB access to avoid public internet traffic.</li>
+    <li>Enable **DNS resolution and DNS hostnames** only if required.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Subnet Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **private subnets** for EC2 instances handling sensitive data.</li>
+    <li>Public subnets only for **load balancers** or NAT gateways; no direct internet access to PCI EC2 instances.</li>
+    <li>Deploy **multiple AZs** to ensure redundancy and high availability.</li>
+    <li>Example:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>AZ1 Private Subnet: 10.0.1.0/24</li>
+        <li>AZ2 Private Subnet: 10.0.2.0/24</li>
+        <li>Public Subnet (for ALB/NAT): 10.0.0.0/24</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Security Group Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Restrict **inbound traffic** strictly:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Allow SSH (22) only from bastion hosts or via Systems Manager Session Manager.</li>
+        <li>Allow application traffic only from approved load balancer security groups.</li>
+        <li>No 0.0.0.0/0 inbound rules for PCI EC2 instances.</li>
+      </ul>
+    </li>
+    <li>Restrict **outbound traffic** to required services only (e.g., RDS, S3 VPC endpoints).</li>
+    <li>Use **separate SGs** for different tiers: web, app, database.</li>
+    <li>Enable **logging and monitoring** via VPC Flow Logs and CloudWatch.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Architecture for PCI EC2 Deployment</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Private EC2 instances in multiple AZs for application and database tiers.</li>
+    <li>Public subnets for ALB/NAT Gateway.</li>
+    <li>Load balancer SG allows traffic from public internet; EC2 SG allows traffic only from ALB SG.</li>
+    <li>Bastion host or Session Manager SG allows SSH access from restricted IP ranges.</li>
+    <li>S3 access via VPC endpoint; no public internet access.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-pci-compliant.png" alt="PCI-Compliant EC2 Network Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Additional PCI Considerations</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **CloudTrail** for auditing API calls.</li>
+    <li>Encrypt all data at rest and in transit (EBS, S3, RDS, TLS).</li>
+    <li>Regularly patch EC2 instances and enforce security baseline using **AWS Systems Manager Patch Manager**.</li>
+    <li>Implement **Network ACLs** for an additional layer of traffic filtering per subnet.</li>
+  </ul>
+</section>
+
+
+
+
+
+
+
+
+
+<section id="ec2-secrets-rotation" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Rotating Secrets for EC2 Applications Without Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    Rotating secrets (like database credentials, API keys, or passwords) is critical for security. AWS provides mechanisms to rotate secrets without stopping your EC2 applications, ensuring seamless operation.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Use AWS Secrets Manager</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create secrets in **Secrets Manager** (e.g., DB username/password, API keys).</li>
+    <li>Enable **automatic rotation** for supported services (RDS, Redshift, DocumentDB).</li>
+    <li>Secrets Manager handles **generating new credentials** and updating the service automatically.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Configure EC2 Application to Use Dynamic Secrets</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **AWS SDK or CLI** to retrieve secrets at runtime instead of storing them on the instance.</li>
+    <li>Example: Fetch database password from Secrets Manager in Java:
+      <pre class="bg-gray-100 p-2 rounded text-sm">
+AWSSecretsManager client = AWSSecretsManagerClientBuilder.standard().build();
+GetSecretValueRequest request = new GetSecretValueRequest().withSecretId("MyDBSecret");
+GetSecretValueResult result = client.getSecretValue(request);
+String secret = result.getSecretString();
+      </pre>
+    </li>
+    <li>Load secrets into environment variables or in-memory config dynamically.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Zero-Downtime Secret Rotation Workflow</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Secrets Manager generates new credentials in the background.</li>
+    <li>New credentials are updated in the database or service.</li>
+    <li>EC2 applications fetch new credentials **without restarting** by:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Polling Secrets Manager at intervals</li>
+        <li>Using event-driven updates (e.g., AWS EventBridge trigger)</li>
+      </ul>
+    </li>
+    <li>Old credentials remain valid until new credentials are confirmed working.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Architecture</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instance running a web app.</li>
+    <li>Application fetches DB password from Secrets Manager at startup and periodically refreshes.</li>
+    <li>Secrets Manager rotates DB password automatically using RDS rotation function.</li>
+    <li>Application continues operating with zero downtime because old credentials remain valid during transition.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Do not store secrets on EC2 instance disk or code repository.</li>
+    <li>Use IAM roles for EC2 to allow access to Secrets Manager.</li>
+    <li>Use **short-lived secrets** and frequent rotation for enhanced security.</li>
+    <li>Monitor **failed access attempts** via CloudWatch and CloudTrail.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-secrets-rotation.png" alt="EC2 Secrets Rotation Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-public-ami-security" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Using Secure and Trusted Public AMIs</h2>
+
+  <p class="mb-4 text-gray-700">
+    Public AMIs can accelerate EC2 deployment, but they may contain vulnerabilities or misconfigurations. Ensuring the security and trustworthiness of public AMIs is critical before using them in production.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Verify the Source</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use AMIs provided by **AWS Marketplace**, official OS vendors (e.g., Amazon Linux, Ubuntu, Red Hat), or verified publishers.</li>
+    <li>Check **publisher information, last updated date, and number of downloads** as trust indicators.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Inspect the AMI</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch the AMI in a **sandbox environment** before production deployment.</li>
+    <li>Perform **vulnerability scans** using tools like AWS Inspector or third-party scanners.</li>
+    <li>Check for **unnecessary software, open ports, and insecure configurations**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Apply Patches and Updates</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Immediately update the OS and installed packages after launching the AMI.</li>
+    <li>Create a **custom hardened AMI** for future deployments with all patches applied.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Use IAM and Security Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch EC2 instances with **least-privilege IAM roles**.</li>
+    <li>Restrict network access via **security groups** and **NACLs**.</li>
+    <li>Enable **CloudTrail and CloudWatch monitoring** to detect unusual behavior.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Workflow for Trusted Public AMIs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Select Ubuntu 22.04 AMI from AWS Marketplace.</li>
+    <li>Launch in a sandbox VPC with private subnets.</li>
+    <li>Scan using AWS Inspector → fix vulnerabilities.</li>
+    <li>Update OS and packages → harden configuration.</li>
+    <li>Create a **custom AMI** for production use.</li>
+    <li>Deploy multiple EC2 instances from this hardened AMI with restricted SGs and IAM roles.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-public-ami-security.png" alt="Secure Public AMI Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-cost-spike" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Investigating Unexpected EC2 Cost Spikes</h2>
+
+  <p class="mb-4 text-gray-700">
+    Sudden increases in EC2 costs can indicate over-provisioning, runaway workloads, misconfigurations, or unplanned usage. Proper monitoring and analysis help identify the root cause and optimize costs.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Monitor Costs and Usage</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **AWS Cost Explorer** to identify which accounts, services, or instance types caused the spike.</li>
+    <li>Check **Cost and Usage Reports (CUR)** for detailed instance-level billing.</li>
+    <li>Enable **Budgets and Alerts** to get notifications on unexpected usage.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Identify High-Usage Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch metrics** to track CPU, network, and disk usage.</li>
+    <li>Identify **idle or underutilized instances** that are still running.</li>
+    <li>Check for **newly launched instances** that may have caused increased cost.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Analyze Instance Types and Regions</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check if **expensive instance types** (e.g., C6g, R5) were launched accidentally.</li>
+    <li>Review **multi-AZ or multi-region deployments** that may duplicate costs.</li>
+    <li>Compare actual usage against **Reserved Instances or Savings Plans** to spot potential savings. </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Remediation Steps</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Stop or terminate **idle or unnecessary instances**.</li>
+    <li>Right-size instances based on actual usage metrics.</li>
+    <li>Move workloads to **Reserved Instances or Savings Plans** for predictable cost savings.</li>
+    <li>Use **Auto Scaling Groups** to dynamically scale workloads up or down.</li>
+    <li>Ensure **Spot Instances** are used for non-critical workloads to reduce costs.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Investigation Flow</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Cost spike detected via **AWS Budget alert**.</li>
+    <li>Cost Explorer shows increase from EC2 in **us-east-1**, specifically **m5.large** instances.</li>
+    <li>CloudWatch reveals two instances were running 24/7 but had <10% CPU utilization.</li>
+    <li>Remediation: Stop unnecessary instances, convert remaining instances to Reserved Instances, enable Auto Scaling.</li>
+    <li>Result: Cost normalized and predictable, with continuous monitoring in place.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cost-spike.png" alt="EC2 Cost Spike Investigation Flow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+<section id="ec2-pricing-models" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Choosing EC2 Pricing Models for Compute-Heavy Workloads</h2>
+
+  <p class="mb-4 text-gray-700">
+    EC2 offers multiple pricing models. Selecting the right model depends on workload predictability, tolerance for interruptions, and cost optimization goals.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. On-Demand Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Pay per hour/second with no long-term commitment.</li>
+    <li>Ideal for **short-lived or unpredictable workloads**.</li>
+    <li>Example: Running a compute-heavy batch job occasionally.</li>
+    <li>Pros: Flexible, easy to start/stop.</li>
+    <li>Cons: Higher cost for continuous workloads.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Reserved Instances (RI)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Commit to 1 or 3 years for lower hourly rates.</li>
+    <li>Ideal for **steady, predictable workloads** like a continuous data processing pipeline.</li>
+    <li>Example: A web application backend that runs 24/7.</li>
+    <li>Pros: Significant cost savings (up to 75%) over On-Demand.</li>
+    <li>Cons: Less flexible, requires forecasting usage.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Spot Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Bid for unused EC2 capacity at steep discounts (up to 90%).</li>
+    <li>Ideal for **compute-heavy, fault-tolerant, or batch workloads** that can tolerate interruptions.</li>
+    <li>Example: Large-scale data processing, simulations, or rendering tasks.</li>
+    <li>Pros: Extremely cost-effective.</li>
+    <li>Cons: Instances can be terminated with 2 minutes notice; not suitable for critical always-on services.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Choosing the Right Model</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If workload is **critical and predictable** → Reserved Instances for cost savings.</li>
+    <li>If workload is **temporary or bursty** → On-Demand for flexibility.</li>
+    <li>If workload is **massively parallel and fault-tolerant** → Spot Instances for maximum cost efficiency.</li>
+    <li>Hybrid approach: Use a combination:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Reserved Instances for base capacity.</li>
+        <li>Spot Instances for additional compute bursts.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Company runs video rendering jobs 24/7:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Reserve RI instances for essential rendering tasks to ensure uptime.</li>
+        <li>Use Spot Instances for extra rendering during peak demand to save cost.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-pricing-models.png" alt="EC2 Pricing Model Comparison" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-instance-right-sizing" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Implementing Instance Right-Sizing at Scale for Microservices</h2>
+
+  <p class="mb-4 text-gray-700">
+    Right-sizing EC2 instances ensures you use the optimal instance type for each microservice, reducing costs while maintaining performance. At scale, this requires monitoring, automation, and regular adjustments.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Monitor Utilization Metrics</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Collect **CPU, memory, disk, and network usage** for each instance using CloudWatch.</li>
+    <li>Set up **detailed metrics** (per microservice, per environment) for visibility.</li>
+    <li>Identify underutilized or overutilized instances to guide resizing decisions.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Categorize Microservices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Classify services based on **workload characteristics**: CPU-intensive, memory-intensive, or network-intensive.</li>
+    <li>Match service requirements to instance families:  
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>C family → compute-intensive</li>
+        <li>R family → memory-intensive</li>
+        <li>M family → general-purpose</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Use Automation Tools</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Leverage **AWS Compute Optimizer** to get recommended instance types for each workload.</li>
+    <li>Implement **Auto Scaling Groups with multiple instance types** for flexible scaling.</li>
+    <li>Automate **resizing workflows** using Lambda or scripts triggered by CloudWatch alarms.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Right-Sizing Workflow</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Step 1: Gather utilization data for all instances over a period (e.g., 2–4 weeks).</li>
+    <li>Step 2: Identify overprovisioned or underutilized instances using Compute Optimizer recommendations.</li>
+    <li>Step 3: Select optimal instance types for each microservice considering peak load.</li>
+    <li>Step 4: Test new instance types in a staging environment.</li>
+    <li>Step 5: Update Auto Scaling Groups to use the new instance types and monitor performance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Microservices: Payment Service (CPU-heavy), Cache Service (Memory-heavy), Reporting Service (Mixed).</li>
+    <li>Current setup: All on M5.large → overprovisioned for reporting, underperforming for payment.</li>
+    <li>Right-sizing:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Payment → C6g.large</li>
+        <li>Cache → R5.large</li>
+        <li>Reporting → M5.large</li>
+      </ul>
+    </li>
+    <li>Auto Scaling Groups updated with multiple instance types for flexibility and cost efficiency.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-instance-right-sizing.png" alt="EC2 Instance Right-Sizing Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+<section id="ec2-auto-scaling-cost-optimization" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Optimizing Idle Auto Scaling Instances</h2>
+
+  <p class="mb-4 text-gray-700">
+    Auto Scaling ensures high availability but can sometimes keep instances running idle for long periods, leading to unnecessary costs. Optimizing scaling policies and instance types can reduce costs without affecting availability.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Analyze Utilization Metrics</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch metrics** (CPU, memory, network, request count) to identify periods of low utilization.</li>
+    <li>Check **per-instance metrics** to see which instances are idle most of the day.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Adjust Auto Scaling Policies</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **target tracking policies** instead of static scaling: automatically scale based on actual load.</li>
+    <li>Implement **step scaling** with smaller increments to prevent over-provisioning.</li>
+    <li>Set **minimum and maximum instance counts** to match real traffic patterns.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Use Spot Instances for Non-Critical Workloads</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Run idle or background batch workloads on **Spot Instances** for cost savings.</li>
+    <li>Combine **On-Demand or Reserved Instances** for critical services and Spot Instances for extra capacity.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Right-Size Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Analyze instance type usage and switch to **smaller instance types** if current instances are underutilized.</li>
+    <li>Use **Compute Optimizer recommendations** to select optimal instance types per workload.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Implement Scheduled Scaling</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>For predictable daily patterns, implement **scheduled scaling** to reduce instance count during off-peak hours.</li>
+    <li>Example: Reduce web tier instances from 6 → 2 between 12 AM–6 AM and scale up during peak traffic hours.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Workflow</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Auto Scaling web tier has 5 instances always running, but CPU averages 5% most of the day.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Analyze CloudWatch metrics → confirm idle periods.</li>
+        <li>Switch to smaller instance types (e.g., t3.medium).</li>
+        <li>Implement target tracking with CPU at 50% → scales down during low load.</li>
+        <li>Add Spot Instances for batch processing jobs.</li>
+        <li>Enable scheduled scaling for predictable off-peak hours.</li>
+      </ul>
+    </li>
+    <li>Result: Cost reduced by 40% without affecting availability.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-auto-scaling-cost-optimization.png" alt="Auto Scaling Cost Optimization Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-ci-cd-cost-optimization" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Designing a Cost-Efficient CI/CD Pipeline Using EC2 for Non-Production Environments</h2>
+
+  <p class="mb-4 text-gray-700">
+    Running CI/CD pipelines in non-production environments can generate unnecessary costs if instances are always running. Optimizing pipeline infrastructure ensures minimal spend while maintaining reliability.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Use Ephemeral or On-Demand EC2 Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Spin up EC2 instances **only when a build or deployment is triggered**.</li>
+    <li>Terminate instances automatically after the job completes.</li>
+    <li>Use **On-Demand or Spot Instances** depending on job tolerance for interruptions.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Leverage Spot Instances for CI Jobs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Run non-critical, parallelizable CI jobs on **Spot Instances** to save costs.</li>
+    <li>Configure **fallback to On-Demand** if Spot capacity is unavailable.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Implement Auto Scaling for Build Agents</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Auto Scaling Groups** to dynamically adjust the number of EC2 build agents based on job queue length.</li>
+    <li>Terminate idle build agents to avoid running unnecessary instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Use Lightweight Instance Types</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Choose **small instance types** (e.g., t3.micro or t3.small) for non-production CI/CD agents unless builds require high CPU/memory.</li>
+    <li>Right-size instances based on historical build metrics.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Automate Pipeline Shutdown</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Schedule **off-hours shutdown** for non-production EC2 instances using CloudWatch Events or Lambda.</li>
+    <li>Example: Turn off all non-critical build agents between 8 PM–8 AM.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Pipeline Architecture</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Developer pushes code → triggers **CodePipeline** or Jenkins job.</li>
+    <li>Pipeline spins up **On-Demand or Spot EC2 instances** as build agents.</li>
+    <li>Build runs, tests execute, artifacts are stored in S3.</li>
+    <li>EC2 instances **terminate automatically** after job completion.</li>
+    <li>Non-production deployments run on **smaller instances** in a sandbox VPC with restricted access.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ci-cd-pipeline.png" alt="Cost-Efficient EC2 CI/CD Pipeline" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-pending-troubleshoot" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Troubleshooting EC2 Instances Stuck in Pending State</h2>
+
+  <p class="mb-4 text-gray-700">
+    An EC2 instance in <strong>pending</strong> state indicates that AWS is attempting to launch it but it hasn't transitioned to <strong>running</strong>. This could be caused by capacity issues, misconfigurations, or network problems. Proper analysis can help resolve it efficiently.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Check Instance Limits and Quotas</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Verify **EC2 instance limits** for the region using the Service Quotas console.</li>
+    <li>Ensure you haven’t exceeded **vCPU limits** or other instance type limits.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Check Availability Zone Capacity</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Some instance types may be unavailable in a specific AZ due to capacity constraints.</li>
+    <li>Try launching the instance in another **AZ within the same region**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Validate AMI and Instance Configuration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure the **AMI exists** and is available in the selected region.</li>
+    <li>Check **instance type compatibility** with the chosen AMI.</li>
+    <li>Verify **key pair**, **security group**, and **subnet** configurations.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Inspect Subnet and Networking</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Confirm the **subnet has available IP addresses**.</li>
+    <li>Check route tables and NACLs to ensure network restrictions are not causing delays.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Check AWS Health and Events</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Visit **AWS Personal Health Dashboard** to check for any **AZ or service issues**.</li>
+    <li>Check **EC2 console events** for messages like “InsufficientInstanceCapacity”.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Use AWS CLI and Logs for Details</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Run:  
+      <code class="bg-gray-100 px-1 py-0.5 rounded">aws ec2 describe-instances --instance-ids i-xxxxxxxx</code>  
+      to check instance state and events.
+    </li>
+    <li>Inspect **system logs** and **console output** for boot errors.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Remediation Steps</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If **capacity issue**, choose a different **AZ** or **instance type**.</li>
+    <li>If **subnet IP exhausted**, expand subnet or select another subnet.</li>
+    <li>Double-check AMI, key pair, and networking configurations, then **terminate and relaunch**.</li>
+    <li>Contact **AWS Support** if issue persists despite correct configuration.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">8. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Instance stuck in pending in us-east-1a → “InsufficientInstanceCapacity” event.</li>
+    <li>Remediation:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Switch instance to us-east-1b → launched successfully.</li>
+        <li>Verified subnet had available IPs and security groups configured correctly.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-pending-troubleshoot.png" alt="EC2 Pending State Troubleshooting" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-health-check-recovery" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Recovering Critical EC2 Instances Failing Health Checks</h2>
+
+  <p class="mb-4 text-gray-700">
+    When a critical EC2 instance fails health checks repeatedly, quick recovery is essential to minimize downtime and prevent data loss. Follow these steps to restore availability safely.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Analyze Health Check Failures</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check **EC2 system status checks** (hardware/network) and **instance status checks** (OS level).</li>
+    <li>Use **CloudWatch metrics** to determine why health checks are failing (CPU spike, memory pressure, application crash, etc.).</li>
+    <li>Inspect **load balancer health checks** if behind ALB/NLB.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Enable Auto Recovery</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>For hardware issues, enable **EC2 Auto Recovery** to automatically migrate the instance to healthy hardware.</li>
+    <li>Auto Recovery preserves **instance ID, EBS volumes, and IP configurations**, minimizing data loss risk.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Take Snapshots / Backups</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Before making changes, create **EBS snapshots** of root and data volumes.</li>
+    <li>Optional: Use **Amazon Machine Image (AMI)** to capture the instance state for rapid relaunch.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Launch Replacement Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Detach existing EBS volumes if needed and attach them to a new instance.</li>
+    <li>Use **same security groups, IAM roles, and network configuration** for consistency.</li>
+    <li>Test application functionality before redirecting traffic.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Update Auto Scaling / Load Balancer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If instance is in an **Auto Scaling Group**, replace unhealthy instances automatically.</li>
+    <li>Ensure **load balancer health checks** remove failing instances from rotation and add new healthy instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Critical web server fails ALB health checks repeatedly.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Enabled EC2 Auto Recovery → instance migrated to healthy hardware.</li>
+        <li>Verified root and data EBS volumes are intact.</li>
+        <li>ALB automatically routed traffic to healthy instances.</li>
+        <li>For extra safety, snapshots were created for backup before recovery.</li>
+      </ul>
+    </li>
+    <li>Result: Downtime minimized, no data loss, service restored quickly.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-health-check-recovery.png" alt="EC2 Health Check Recovery Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-rds-latency-troubleshoot" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Investigating High Latency Between EC2 and RDS</h2>
+
+  <p class="mb-4 text-gray-700">
+    High latency between your application on EC2 and RDS can impact user experience. Latency could stem from networking, database load, query inefficiencies, or instance misconfiguration. This section outlines steps to identify and resolve the root cause.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Check Network Configuration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure EC2 and RDS are in the **same VPC** and ideally **same Availability Zone** to reduce network latency.</li>
+    <li>Check **security groups** and **NACLs**; misconfigured rules can cause connection delays.</li>
+    <li>Verify **DNS resolution** if connecting via RDS endpoint.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Monitor Database Performance Metrics</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch metrics**: CPU, memory, read/write IOPS, DB connections, and network throughput.</li>
+    <li>High CPU or I/O saturation could indicate **resource bottlenecks** causing query delays.</li>
+    <li>Check **slow query logs** on RDS for inefficient queries.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Analyze Application Queries</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **query logging** in your application or ORM (e.g., Hibernate SQL logging for Java apps).</li>
+    <li>Identify **N+1 query patterns** or repeated queries that increase latency.</li>
+    <li>Optimize queries with **indexes, joins, and proper SELECT statements**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Check RDS Instance Type and Scaling</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure RDS instance has **enough CPU/memory** for workload.</li>
+    <li>Consider **vertical scaling** (larger instance) or **read replicas** for read-heavy workloads.</li>
+    <li>Enable **Enhanced Monitoring** and Performance Insights for detailed diagnostics.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Investigate Connection Management</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **connection pooling** (e.g., HikariCP for Java) to avoid frequent connection creation overhead.</li>
+    <li>Verify **max_connections** on RDS to prevent throttling.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2-hosted Java app shows 500ms average query latency to RDS MySQL.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Verified EC2 and RDS are in same AZ → network latency <5ms.</li>
+        <li>Enabled Performance Insights → discovered heavy full table scans.</li>
+        <li>Added appropriate indexes and optimized queries → latency dropped to 50ms.</li>
+        <li>Configured HikariCP connection pool to reduce connection overhead.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-rds-latency-troubleshoot.png" alt="EC2 to RDS Latency Troubleshooting" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+<section id="ec2-rds-latency-troubleshoot" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Investigating High Latency Between EC2 and RDS</h2>
+
+  <p class="mb-4 text-gray-700">
+    When your application running on EC2 shows high latency for queries to RDS, it can be caused by multiple factors: network, database load, inefficient queries, or instance configuration. Identifying the root cause ensures optimal performance and minimal downtime.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Analyze Network Latency</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure EC2 and RDS are in the <strong>same VPC</strong> and preferably the same Availability Zone to reduce latency.</li>
+    <li>Use <code>ping</code> or <code>traceroute</code> from EC2 to RDS endpoint to measure network delay.</li>
+    <li>Check <strong>security groups and NACLs</strong> for any misconfigurations causing connection delays.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Monitor RDS Performance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use <strong>CloudWatch</strong> metrics for CPU, memory, disk IOPS, and network throughput.</li>
+    <li>Enable <strong>Performance Insights</strong> to identify queries causing high load.</li>
+    <li>Look for <strong>lock waits</strong>, <strong>long-running transactions</strong>, or max connections reached.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Review Application Queries</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable query logging in the application or ORM (e.g., Hibernate SQL logging).</li>
+    <li>Identify N+1 query problems or repeated queries that inflate latency.</li>
+    <li>Optimize queries using proper indexes, limiting SELECT columns, and batching requests.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Evaluate RDS Instance Type</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check if the current RDS instance is undersized for the workload.</li>
+    <li>Consider vertical scaling (larger instance) or horizontal scaling with read replicas.</li>
+    <li>Enable enhanced monitoring to correlate CPU/IO spikes with query latency.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Connection Management</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use connection pooling (e.g., HikariCP for Java) to avoid overhead of creating new connections repeatedly.</li>
+    <li>Ensure <strong>max_connections</strong> on RDS is sufficient for concurrent connections.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>A Java application on EC2 reports 500ms average query latency to RDS MySQL.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Verified EC2 and RDS are in the same AZ → network latency <5ms.</li>
+        <li>Enabled Performance Insights → identified full table scans causing high load.</li>
+        <li>Added proper indexes → reduced query latency to 50ms.</li>
+        <li>Configured HikariCP connection pool → reduced connection setup time.</li>
+      </ul>
+    </li>
+    <li>Result: Significant reduction in query latency and improved user experience.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-rds-latency-troubleshoot.png" alt="EC2 to RDS Latency Troubleshooting" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-patch-recovery" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Recovering EC2 Instances Stuck During Security Patch Updates</h2>
+
+  <p class="mb-4 text-gray-700">
+    Security patch updates are critical but can sometimes cause EC2 instances to become unresponsive due to kernel updates, package conflicts, or reboot issues. Proper recovery procedures prevent downtime and avoid repeated failures.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Verify Instance Status</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check EC2 <strong>system status</strong> and <strong>instance status checks</strong> in the console.</li>
+    <li>Use <code>aws ec2 describe-instance-status --instance-ids i-xxxxxxxx</code> to view events and pending updates.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Access the Instance Safely</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If SSH is unavailable, use **AWS Systems Manager Session Manager** to access the instance securely without opening ports.</li>
+    <li>Check for processes hanging due to updates or disk space issues in <code>/var/log</code> (e.g., <code>/var/log/yum.log</code> or <code>/var/log/dpkg.log</code>).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Take Backups / Snapshots</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create **EBS snapshots** of the root and data volumes before attempting recovery.</li>
+    <li>Optional: Create an **AMI** to capture the current state for rollback if needed.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Recover the Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If system status checks fail, consider **stop and start** the instance to migrate to healthy hardware.</li>
+    <li>For stuck package updates:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Boot into **recovery mode** or detach the root volume and attach it to a temporary instance to fix packages.</li>
+        <li>Resolve incomplete updates (e.g., <code>yum-complete-transaction</code> or <code>dpkg --configure -a</code>).</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Prevent Repeated Failures</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Test patch updates in a **staging environment** before production.</li>
+    <li>Use **AMI snapshots** before automated updates for quick rollback.</li>
+    <li>Schedule updates during **maintenance windows** and monitor system status continuously.</li>
+    <li>Enable **CloudWatch alarms** for high CPU, disk, or memory usage during patching.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instance hangs after automatic OS patch applied at 3 AM.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Accessed instance via Systems Manager Session Manager → identified stuck <code>yum</code> process.</li>
+        <li>Created EBS snapshot for safety.</li>
+        <li>Stopped and started instance → migrated to healthy host.</li>
+        <li>Resolved package conflict → tested updates on staging AMI before reapplying to production.</li>
+      </ul>
+    </li>
+    <li>Result: Instance recovered quickly with minimal downtime and future updates became safe.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-patch-recovery.png" alt="EC2 Patch Update Recovery Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-ebs-full-disk" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Handling Full EBS Disk on EC2 Without Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    A full EBS volume can cause application failures, logging issues, or even system instability. The goal is to increase disk capacity or free up space without stopping the instance, ensuring uninterrupted service.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Identify Disk Usage</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check disk space using: <code>df -h</code> to identify full partitions.</li>
+    <li>Inspect large files and directories: <code>du -sh /*</code> or <code>ncdu</code> (if installed).</li>
+    <li>Check log directories (<code>/var/log</code>) for large or stale log files.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Clean Up Space Safely</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Delete unnecessary temporary files: <code>rm -rf /tmp/*</code>.</li>
+    <li>Rotate or truncate logs without deleting critical logs: <code>logrotate</code> or <code>truncate -s 0 /var/log/app.log</code>.</li>
+    <li>Remove old backups or snapshots stored on the same volume.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Expand EBS Volume Online</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Navigate to the **EC2 Console → Volumes**, select the volume, and choose **Modify Volume**.</li>
+    <li>Increase the size of the EBS volume (e.g., from 20GB → 50GB).</li>
+    <li>Resize the filesystem without stopping the instance:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>For **ext4**: <code>sudo resize2fs /dev/xvdf</code></li>
+        <li>For **XFS**: <code>sudo xfs_growfs /</code></li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Monitor Disk Usage</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use CloudWatch **disk space alarms** to prevent future full disk scenarios.</li>
+    <li>Implement log rotation and automated cleanup scripts.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Production EC2 with 20GB EBS volume reaches 100% utilization → app logs failing.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Checked disk usage → /var/log/app.log consuming 10GB.</li>
+        <li>Truncated logs → freed 8GB immediately.</li>
+        <li>Expanded EBS to 50GB using **Modify Volume** → resized filesystem online.</li>
+        <li>Enabled CloudWatch disk alarms → alerts for future high usage.</li>
+      </ul>
+    </li>
+    <li>Result: Disk space issue resolved without stopping the EC2 instance → zero downtime.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ebs-full-disk.png" alt="EC2 Full EBS Disk Recovery" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-nat-private-subnet" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Allowing Private Subnet EC2 Instances to Access the Internet via NAT</h2>
+
+  <p class="mb-4 text-gray-700">
+    EC2 instances in a <strong>private subnet</strong> cannot directly access the internet. To enable outbound internet access (e.g., for updates or API calls) while keeping instances private, use a NAT Gateway or NAT Instance.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Choose NAT Type</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li><strong>NAT Gateway (Recommended)</strong>: Managed service, highly available, scales automatically.</li>
+    <li><strong>NAT Instance</strong>: Self-managed EC2 instance running NAT AMI, must handle scaling, HA, and updates manually.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Configure NAT Gateway</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a **public subnet** in the VPC.</li>
+    <li>Launch a **NAT Gateway** in the public subnet with an **Elastic IP**.</li>
+    <li>Ensure the NAT Gateway has proper **security group rules** allowing outbound traffic.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Update Route Tables</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Private subnet route table → add a route for <code>0.0.0.0/0</code> pointing to the NAT Gateway.</li>
+    <li>Public subnet route table → has default route <code>0.0.0.0/0</code> pointing to Internet Gateway (IGW).</li>
+    <li>Ensure private subnet has no direct IGW route → keeps instances unreachable from the internet.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Security Groups and NACLs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Private EC2 instances: outbound rules to allow required ports (e.g., TCP 80/443) to 0.0.0.0/0 via NAT.</li>
+    <li>NAT Gateway/Instance: security group allows inbound traffic from private subnet and outbound to Internet.</li>
+    <li>NACLs should allow ephemeral port responses from Internet (1024-65535) back to private instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Private subnet hosts EC2 instances running backend services.</li>
+    <li>NAT Gateway launched in public subnet with Elastic IP.</li>
+    <li>Private subnet route table updated: <code>0.0.0.0/0 → NAT Gateway</code>.</li>
+    <li>Result: EC2 instances can install updates and call APIs without being publicly accessible.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-private-subnet-nat.png" alt="EC2 Private Subnet NAT Setup" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+<section id="ec2-cross-az-communication" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Troubleshooting EC2-to-EC2 Private IP Communication Across AZs</h2>
+
+  <p class="mb-4 text-gray-700">
+    EC2 instances in different Availability Zones (AZs) may fail to communicate over private IP due to network misconfigurations. Proper VPC, subnet, route tables, and security group setup is critical.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Verify VPC and Subnets</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure both EC2 instances are in the **same VPC**; private IPs across VPCs require VPC peering or Transit Gateway.</li>
+    <li>Check that each AZ has its own subnet and that **subnets have unique CIDR blocks**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Check Security Groups</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Confirm **inbound rules** allow traffic from the other instance’s private IP or security group.</li>
+    <li>Ensure **outbound rules** allow traffic to the destination instance’s private IP or security group.</li>
+    <li>Example for two instances in different AZs:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Instance A SG inbound: TCP 8080 from SG of Instance B.</li>
+        <li>Instance B SG outbound: TCP 8080 to SG of Instance A.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Inspect Network ACLs (NACLs)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Verify that NACLs for each subnet allow inbound and outbound traffic on required ports and IP ranges.</li>
+    <li>Remember NACLs are **stateless**, so both inbound and outbound rules must be explicitly allowed.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Verify Routing</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check private subnet route tables → should have route to <code>local</code> for VPC CIDR (default route to other AZ subnet).</li>
+    <li>Do not rely on IGW or NAT routes for private IP communication; local VPC route handles it automatically.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Test Connectivity</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ping the private IP from one instance to another: <code>ping 10.0.x.x</code>.</li>
+    <li>Check specific port connectivity using <code>telnet 10.0.x.x 8080</code> or <code>nc -vz 10.0.x.x 8080</code>.</li>
+    <li>Enable VPC Flow Logs to see if traffic is blocked at subnet or security group level.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Two EC2 instances in us-east-1a and us-east-1b cannot communicate on TCP 8080.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Verified both instances are in same VPC → correct.</li>
+        <li>Security group inbound for Instance A only allowed 127.0.0.1 → updated to allow SG of Instance B.</li>
+        <li>Outbound rules and NACL rules verified → allowed traffic.</li>
+        <li>Ping and telnet tests successful → connectivity restored.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cross-az-communication.png" alt="EC2 Cross-AZ Private IP Troubleshooting" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-sqs-roles" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Securely Allowing EC2 Instances to Consume SQS Messages</h2>
+
+  <p class="mb-4 text-gray-700">
+    Directly storing AWS credentials on EC2 is a security risk. The recommended approach is to use <strong>IAM roles</strong> attached to EC2 instances. This allows secure access to SQS without embedding credentials.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create an IAM Role for EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to IAM Console → Roles → Create role → Select **AWS service** → EC2.</li>
+    <li>Attach a policy that grants required SQS permissions (SendMessage, ReceiveMessage, DeleteMessage, etc.).</li>
+    <li>Example managed policy: <code>AmazonSQSFullAccess</code> (for testing) or create a custom policy with least privilege.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Attach Role to EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch EC2 → under **IAM role**, select the role created in previous step.</li>
+    <li>For existing instances, select the instance → Actions → Security → Modify IAM Role → attach the role.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Least Privilege Policy Example</h3>
+  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto text-gray-800">
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:us-east-1:123456789012:my-queue"
+    }
+  ]
+}
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Configure EC2 Application to Use Role</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>AWS SDKs (Java, Python, Node.js) automatically retrieve temporary credentials from the EC2 instance metadata service when a role is attached.</li>
+    <li>No need to store or hardcode access keys in the application.</li>
+    <li>Example in Java using AWS SDK v2:
+      <pre class="bg-gray-100 p-2 rounded text-sm text-gray-800">
+SqsClient sqs = SqsClient.builder()
+                          .region(Region.US_EAST_1)
+                          .build();
+
+ReceiveMessageRequest request = ReceiveMessageRequest.builder()
+                                                      .queueUrl("https://sqs.us-east-1.amazonaws.com/123456789012/my-queue")
+                                                      .maxNumberOfMessages(10)
+                                                      .build();
+
+ReceiveMessageResponse response = sqs.receiveMessage(request);
+      </pre>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Security Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **least privilege** – grant only necessary SQS actions and limit resource ARNs.</li>
+    <li>Rotate credentials automatically – IAM roles provide temporary credentials that rotate automatically.</li>
+    <li>Enable **CloudTrail** to monitor access and SQS API calls for auditing.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instances process messages from a queue `order-processing-queue`.</li>
+    <li>IAM role attached with permissions to receive and delete messages only from that queue.</li>
+    <li>Application uses AWS SDK → automatically uses temporary credentials → securely consumes messages.</li>
+    <li>No static AWS credentials stored on the instance → minimal security risk.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-sqs-roles.png" alt="EC2 SQS Role Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-elasticache-low-latency" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Architecting Low-Latency EC2 Access to ElastiCache Across AZs</h2>
+
+  <p class="mb-4 text-gray-700">
+    When EC2 instances need to access ElastiCache in a different Availability Zone (AZ), network latency and availability must be carefully considered. Proper placement, subnet design, and endpoint configuration are key.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Use Multi-AZ ElastiCache Deployment</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable Multi-AZ for Redis or Memcached clusters to improve availability and failover.</li>
+    <li>ElastiCache provides **primary and replica nodes** across AZs automatically.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Placement Considerations</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch EC2 instances in the **same VPC** as ElastiCache.</li>
+    <li>Place EC2 instances **in the same AZ as a replica** to minimize latency.</li>
+    <li>If cross-AZ access is necessary, ensure high-bandwidth subnets and route tables are correctly configured.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Subnet and Security Group Configuration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>ElastiCache subnet group should include all subnets in the AZs where your EC2 instances reside.</li>
+    <li>Security groups:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>ElastiCache SG inbound: allow traffic from EC2 SG on Redis/Memcached ports (6379/11211).</li>
+        <li>EC2 SG outbound: allow traffic to ElastiCache SG.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. DNS Endpoint Usage</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use ElastiCache **cluster endpoints** (for Redis primary/replica) or **configuration endpoint** (for Memcached) in your application configuration.</li>
+    <li>Endpoints automatically resolve to nodes within your VPC, ensuring proper routing.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Monitoring and Failover</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch metrics** to monitor latency, CPU, and memory usage.</li>
+    <li>Enable **automatic failover** for Redis Multi-AZ to ensure high availability.</li>
+    <li>Optionally, implement client-side retry logic for transient network issues.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 application in AZ us-east-1a needs access to Redis cluster in us-east-1b.</li>
+    <li>Steps taken:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>ElastiCache Redis deployed with Multi-AZ enabled → primary in 1b, replica in 1a.</li>
+        <li>EC2 SG outbound allowed traffic to Redis SG on port 6379.</li>
+        <li>Application connects to **Redis configuration endpoint** → automatically resolves to replica in same AZ → minimal latency.</li>
+        <li>CloudWatch monitors latency → alarms set for >5ms latency spikes.</li>
+      </ul>
+    </li>
+    <li>Result: Low-latency, highly available Redis access across AZs without manual IP management.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-elasticache-low-latency.png" alt="EC2 ElastiCache Cross-AZ Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+<section id="ec2-multi-region" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Reducing Latency with Multi-Region EC2 Deployment</h2>
+
+  <p class="mb-4 text-gray-700">
+    When users are geographically distant from your EC2 instances, latency increases. Deploying EC2 instances in multiple regions closer to users reduces latency and improves availability.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Deploy EC2 Instances in Multiple Regions</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch EC2 instances in regions closer to users (e.g., Asia-Pacific (Singapore), Europe (Frankfurt), US-East-1).</li>
+    <li>Use the same application stack and configurations in each region for consistency.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Use Global Load Balancing</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use <strong>Amazon Route 53</strong> with latency-based routing to direct users to the closest region.</li>
+    <li>Optionally, use <strong>CloudFront CDN</strong> to cache static content near users globally.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Database and State Considerations</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>For global applications, consider **multi-region databases** or read replicas (e.g., RDS Read Replicas, DynamoDB Global Tables) to reduce cross-region latency.</li>
+    <li>Keep EC2 instances stateless where possible; store state in shared, globally accessible storage (S3, ElastiCache with cross-region replication).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Synchronization and Replication</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure configuration, application code, and content are synchronized across regions using CI/CD pipelines and automated deployment scripts.</li>
+    <li>Enable cross-region replication for S3 buckets and caches as needed.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Users in Asia report 300ms latency to EC2 in US-East-1.</li>
+    <li>Deploy additional EC2 instances in ap-southeast-1 (Singapore) region.</li>
+    <li>Configure Route 53 latency-based routing → traffic automatically directed to Singapore for Asian users.</li>
+    <li>RDS in US-East-1 → create read replica in Singapore → reduce cross-region database latency.</li>
+    <li>Result: Average latency reduced to ~50ms for Asia users → better performance and user experience.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-multi-region.png" alt="Multi-Region EC2 Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+<section id="ec2-auto-healing" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Designing Auto-Healing EC2 Architecture for Microservices</h2>
+
+  <p class="mb-4 text-gray-700">
+    Auto-healing ensures that unhealthy EC2 instances are automatically replaced without impacting application availability. Integrating Auto Scaling Groups (ASG), Application Load Balancers (ALB), and CloudWatch alarms is key to achieving this.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Launch EC2 Instances in Auto Scaling Group</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Define an **Auto Scaling Group** with minimum, maximum, and desired instance counts.</li>
+    <li>Attach EC2 launch template specifying AMI, instance type, security groups, and IAM roles.</li>
+    <li>Enable **health checks** using ELB health checks or EC2 instance status checks.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Integrate with Application Load Balancer (ALB)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach the ASG to an **ALB target group** for your microservices endpoints.</li>
+    <li>ALB distributes traffic to healthy EC2 instances automatically.</li>
+    <li>Unhealthy instances fail ALB health checks → ASG terminates and replaces them.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Configure CloudWatch Alarms</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Set up **CloudWatch metrics** monitoring CPU, memory, disk, or custom application metrics.</li>
+    <li>Create **alarms** that trigger Auto Scaling policies:
+      <ul class="list-disc list-inside ml-6 space-y-1">
+        <li>Scale-out: add instances when CPU > 70% for 5 minutes.</li>
+        <li>Scale-in: remove instances when CPU < 30% for 5 minutes.</li>
+        <li>Replace unhealthy instances automatically.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Auto-Healing Workflow</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>ALB health check fails on an instance → marks it unhealthy.</li>
+    <li>ASG detects unhealthy instance → terminates it.</li>
+    <li>ASG launches a new EC2 instance based on the launch template.</li>
+    <li>New instance registers with ALB → traffic automatically routed.</li>
+    <li>CloudWatch monitors metrics to trigger scaling events or detect failures.</li>
+  </ol>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Microservices app running in an ASG with 3 EC2 instances behind an ALB.</li>
+    <li>ALB health check fails on instance #2 → CloudWatch logs detect high CPU.</li>
+    <li>ASG terminates instance #2 → launches a replacement instance automatically.</li>
+    <li>Traffic continues seamlessly through ALB to healthy instances.</li>
+    <li>Scaling policies ensure more instances spin up during peak load and scale down during idle periods.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-auto-healing.png" alt="Auto-Healing EC2 Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+<section id="ec2-blue-green" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Blue-Green Deployment for EC2 Services Without Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    Blue-Green Deployment allows you to deploy a new version of your application (green) while keeping the current version (blue) running. Traffic is switched gradually to the new version to ensure zero downtime.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Prepare Blue and Green Environments</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Blue environment: currently running EC2 instances serving production traffic.</li>
+    <li>Green environment: new EC2 instances with updated application version, identical configuration (AMI, instance type, security groups, IAM roles).</li>
+    <li>Both environments deployed behind the same **Application Load Balancer (ALB)**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Deploy the Green Environment</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch new EC2 instances in the same Auto Scaling Group or a separate ASG for green.</li>
+    <li>Ensure instances are registered with the ALB **target group** but initially receive zero traffic.</li>
+    <li>Run smoke tests on green environment to verify functionality.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Switch Traffic Using ALB</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>ALB supports multiple target groups → blue and green can be target groups.</li>
+    <li>Update **ALB listener rules** to point traffic gradually to green target group.</li>
+    <li>Monitor metrics and logs to ensure green handles requests correctly.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Rollback Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If issues are detected, switch ALB listener back to blue target group → instant rollback.</li>
+    <li>Green environment can be terminated after successful validation or kept as standby for future deployments.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Blue environment running v1.0 of a microservices app behind ALB target group "blue-group".</li>
+    <li>Green environment deployed with v2.0 in "green-group" → tested internally.</li>
+    <li>ALB listener gradually shifts 100% of traffic to green-group after verification.</li>
+    <li>If v2.0 fails → switch back to blue-group instantly → zero downtime for users.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **same VPC, subnets, and security groups** for both environments to simplify routing.</li>
+    <li>Automate deployment using **CI/CD pipelines** (CodeDeploy, GitHub Actions, Jenkins, or Terraform).</li>
+    <li>Enable **health checks** on ALB to automatically remove unhealthy instances during the switch.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-blue-green.png" alt="Blue-Green Deployment Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+<section id="ec2-ecs-eks" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Running Containerized Applications on ECS/EKS Using EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    EC2 instances can host containerized applications through <strong>Amazon ECS (Elastic Container Service)</strong> or <strong>Amazon EKS (Elastic Kubernetes Service)</strong>. Efficient use of EC2 ensures cost-effectiveness, scalability, and high availability.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. ECS with EC2 Launch Type</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **EC2 launch type** to run ECS tasks on EC2 instances in your cluster.</li>
+    <li>Deploy ECS Cluster → register EC2 instances using ECS optimized AMI.</li>
+    <li>Define **task definitions** specifying container images, CPU, memory, port mappings, and environment variables.</li>
+    <li>Tasks are scheduled automatically by ECS on available EC2 instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. EKS with EC2 Worker Nodes</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy **EKS cluster** → create **node groups** of EC2 instances.</li>
+    <li>Use Kubernetes **Deployments, StatefulSets, and Services** to manage pods on EC2 nodes.</li>
+    <li>Configure **autoscaling** at node group level using Cluster Autoscaler and pod level using Horizontal Pod Autoscaler.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Efficient EC2 Usage</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Choose instance types based on container workload (CPU vs memory intensive).</li>
+    <li>Enable **EC2 Auto Scaling** → add/remove instances based on container demand.</li>
+    <li>Use **Spot Instances** for non-critical tasks to reduce costs.</li>
+    <li>Monitor cluster metrics using **CloudWatch** or **Prometheus/Grafana** to optimize utilization.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Networking and Security</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instances should reside in **private subnets** for security.</li>
+    <li>Use **ALB/NLB** for service exposure and load balancing across containers.</li>
+    <li>Assign **IAM roles** to EC2 instances for tasks/pods needing AWS API access.</li>
+    <li>Use **security groups and network policies** to restrict container traffic.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Scenario</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>ECS cluster with 3 t3.medium EC2 instances hosting a microservices app in Docker containers.</li>
+    <li>ALB routes HTTP traffic to ECS services → each service runs multiple tasks for high availability.</li>
+    <li>EC2 Auto Scaling adds instances during peak load → CloudWatch CPU/Memory alarms trigger scaling.</li>
+    <li>Spot instances used for batch processing tasks → cost savings without affecting primary services.</li>
+    <li>EKS scenario: EC2 worker nodes in private subnets → Kubernetes manages pod scheduling, scaling, and service discovery.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ecs-eks.png" alt="ECS/EKS EC2 Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+<section id="ec2-gpu-ml" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Running GPU Instances for ML Inference on EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    Machine Learning workloads often require GPU instances (e.g., p3, g4, g5) for fast inference. Efficient scaling and cost optimization are critical because GPU instances are expensive.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Choosing GPU Instance Types</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>P3 instances: high-performance NVIDIA V100 GPUs → suitable for heavy training or inference.</li>
+    <li>G4/G5 instances: NVIDIA T4/A10G → optimized for inference and real-time workloads.</li>
+    <li>Pick instance type based on workload size, batch inference, and memory requirements.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Scaling GPU Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **EC2 Auto Scaling Groups (ASG)** with GPU instance types.</li>
+    <li>Configure **CloudWatch alarms** on GPU utilization, CPU, or memory to trigger scale-out/scale-in events.</li>
+    <li>Consider **mixed-instance policies** → mix GPU and CPU instances to reduce costs when GPU load is low.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Cost Optimization Strategies</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Spot GPU instances** for non-critical batch inference → up to 70–90% cost savings.</li>
+    <li>Use **Elastic Inference (EI)** for EC2 or SageMaker endpoints to attach fractional GPUs instead of full GPU instances.</li>
+    <li>Leverage **Auto Scaling with mixed-instance types** to ensure minimum necessary GPU usage.</li>
+    <li>Turn off unused GPU instances during idle hours using scheduled scaling policies.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Architecture Example</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>ML inference service deployed on **G4 EC2 instances** in an Auto Scaling Group behind an ALB.</li>
+    <li>CloudWatch monitors GPU utilization → scales out additional instances during peak inference load.</li>
+    <li>Spot instances handle batch jobs → CPU-only instances serve low-priority requests.</li>
+    <li>Result: High performance, low latency inference while minimizing GPU costs.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-gpu-ml.png" alt="GPU EC2 Auto Scaling Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+<section id="ec2-multi-tenant" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Designing Multi-Tenant EC2 Architecture with Database and Caching</h2>
+
+  <p class="mb-4 text-gray-700">
+    Multi-tenant applications allow multiple customers (tenants) to share the same compute infrastructure while maintaining isolation at the data layer. Proper design ensures security, scalability, and efficient resource utilization.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Compute Layer (EC2)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Run application servers on **EC2 Auto Scaling Groups** to handle variable load.</li>
+    <li>Use **stateless application design** → tenant-specific state stored in database/cache, not on instance.</li>
+    <li>Tag instances by environment (prod/staging) or workload type for monitoring and cost tracking.</li>
+    <li>Optional: Use **ECS/EKS on EC2** for containerized multi-tenant services.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Database Layer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Choose **shared database with tenant isolation** via a `tenant_id` column or **separate schema per tenant**.</li>
+    <li>Use **RDS (PostgreSQL/MySQL)** with read replicas for high availability.</li>
+    <li>Ensure **encrypted connections** and tenant-specific access policies.</li>
+    <li>Example: Table `orders` → column `tenant_id` ensures each tenant sees only their data.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Caching Layer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **ElastiCache (Redis or Memcached)** to store frequently accessed tenant data.</li>
+    <li>Partition cache by tenant ID or use **namespacing keys** (`tenant:<id>:session`) to avoid collisions.</li>
+    <li>Shared cache reduces EC2 memory usage while maintaining tenant isolation.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Networking and Security</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy EC2, RDS, and ElastiCache in **private subnets** within the same VPC.</li>
+    <li>Use **security groups** to restrict traffic: only app instances can access database/cache.</li>
+    <li>Optionally, use **VPC endpoints** for secure S3 access per tenant.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Monitoring and Isolation</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch metrics** to monitor CPU, memory, database connections, and cache hits per instance or tenant.</li>
+    <li>Use **tags or tenant IDs in logs** to trace and isolate issues without affecting other tenants.</li>
+    <li>Implement rate limiting per tenant to prevent noisy neighbor problems.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example Architecture</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Single EC2 Auto Scaling Group hosts all tenant app instances (stateless).</li>
+    <li>Shared RDS database with `tenant_id` column for isolation → read replicas for scaling.</li>
+    <li>Shared Redis cache → tenant-key namespacing (`tenant:123:session`) for session storage.</li>
+    <li>ALB routes traffic → CloudWatch monitors instance health, database connections, and cache utilization.</li>
+    <li>Cost efficiency: compute resources are shared; each tenant has isolated logical data and session space.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-multi-tenant.png" alt="Multi-Tenant EC2 Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
 
 
 
