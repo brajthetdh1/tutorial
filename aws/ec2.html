@@ -1048,6 +1048,3540 @@ Hello from EC2!
 
 
 
+
+
+
+<section id="ec2-cli-launch" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Launching an EC2 Instance Using AWS CLI with a Specific AMI</h2>
+
+  <p class="mb-4 text-gray-700">
+    AWS CLI provides a fast and reproducible way to launch EC2 instances. You can specify the AMI ID, instance type, key pair, security groups, and subnet directly in the command.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Prerequisites</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Install and configure <code>awscli</code> with access key, secret key, and default region.</li>
+    <li>Identify the **AMI ID** you want to use (e.g., Ubuntu 22.04 in us-east-1).</li>
+    <li>Have a **key pair** for SSH access.</li>
+    <li>Know the **subnet ID** and **security group ID** for your instance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Launch Command Example</h3>
+  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+aws ec2 run-instances \
+  --image-id ami-0abcdef1234567890 \
+  --count 1 \
+  --instance-type t2.micro \
+  --key-name MyKeyPair \
+  --security-group-ids sg-0123456789abcdef0 \
+  --subnet-id subnet-0ab1c2d3e4f567890 \
+  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=MyEC2Instance}]'
+  </pre>
+
+  <p class="mb-4 text-gray-700">
+    <strong>Explanation:</strong>
+  </p>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li><code>--image-id</code>: The AMI ID to use for the instance.</li>
+    <li><code>--count</code>: Number of instances to launch.</li>
+    <li><code>--instance-type</code>: EC2 instance type (e.g., t2.micro).</li>
+    <li><code>--key-name</code>: Name of the SSH key pair for access.</li>
+    <li><code>--security-group-ids</code>: Security groups attached to the instance.</li>
+    <li><code>--subnet-id</code>: Subnet where the instance will reside.</li>
+    <li><code>--tag-specifications</code>: Optional tags for identification.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Verify Instance Launch</h3>
+  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+aws ec2 describe-instances \
+  --filters "Name=instance-state-name,Values=pending,running" \
+  --query "Reservations[*].Instances[*].[InstanceId,State.Name,PublicIpAddress,Tags]" \
+  --output table
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Connect via SSH</h3>
+  <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+ssh -i "MyKeyPair.pem" ec2-user@<Public-IP-of-Instance>
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always launch instances in private subnets if possible and use NAT or Bastion hosts for access.</li>
+    <li>Use tags for cost allocation and identification per environment or project.</li>
+    <li>Consider using **Launch Templates** to standardize instance configurations.</li>
+    <li>For production workloads, enable **CloudWatch monitoring** and **detailed metrics**.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cli-launch.png" alt="EC2 CLI Launch Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-change-instance-type" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Changing EC2 Instance Type Without Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    Sometimes you need to upgrade or downgrade your EC2 instance type to handle different workloads. Directly changing a running instance type requires stopping it, which causes downtime. To minimize or avoid downtime, you can use strategies like **Auto Scaling, Elastic Load Balancing, or creating a replacement instance**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Stop and Change Instance Type (Simple Approach)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Stop the instance (<strong>downtime occurs</strong>):</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">aws ec2 stop-instances --instance-ids i-0123456789abcdef0</pre>
+    <li>Change the instance type:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">aws ec2 modify-instance-attribute --instance-id i-0123456789abcdef0 --instance-type "{\"Value\": \"t3.medium\"}"</pre>
+    <li>Start the instance again:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">aws ec2 start-instances --instance-ids i-0123456789abcdef0</pre>
+  </ul>
+
+  <p class="mt-2 text-gray-600">⚠️ This causes downtime because the instance must stop.</p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Zero-Downtime Approach Using Auto Scaling and Load Balancer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy your application behind an **Elastic Load Balancer (ALB/NLB)**.</li>
+    <li>Use an **Auto Scaling Group (ASG)** with the old instance type running.</li>
+    <li>Create a new **launch template** or **launch configuration** with the new instance type.</li>
+    <li>Update the ASG to use the new launch template → new instances are launched with the new type.</li>
+    <li>Once new instances are healthy, deregister old instances from the load balancer and terminate them.</li>
+    <li>Result: application remains available during the instance type upgrade.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always use **Elastic Load Balancers** to distribute traffic for high availability.</li>
+    <li>Use **Auto Scaling Groups** to replace instances gradually, avoiding downtime.</li>
+    <li>Take a **snapshot of EBS volumes** before changing instance type to prevent data loss.</li>
+    <li>Monitor **CloudWatch metrics** to validate performance improvements after scaling.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-change-instance-type.png" alt="EC2 Instance Type Upgrade Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-stop-start-reboot" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Stopping, Starting, and Rebooting EC2 Instances Safely</h2>
+
+  <p class="mb-4 text-gray-700">
+    Managing the lifecycle of EC2 instances is essential for maintenance, cost control, and troubleshooting. AWS provides three primary actions: <strong>stop</strong>, <strong>start</strong>, and <strong>reboot</strong>. Each has different implications for uptime, EBS volumes, and networking.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Stopping an EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use stop to **temporarily shut down** an instance while preserving EBS data.</li>
+    <li>The public IP may change unless an **Elastic IP** is attached.</li>
+    <li>Command Example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 stop-instances --instance-ids i-0123456789abcdef0
+    </pre>
+    <li>Use this for maintenance, cost savings, or patching OS without terminating the instance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Starting a Stopped EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Start brings a stopped instance back online with the same EBS volumes.</li>
+    <li>If no Elastic IP is attached, a **new public IP** will be assigned.</li>
+    <li>Command Example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 start-instances --instance-ids i-0123456789abcdef0
+    </pre>
+    <li>Best practice: Verify security group, subnet, and IAM role configurations after start.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Rebooting an EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Reboot performs a **graceful OS restart** without affecting EBS volumes or public IP.</li>
+    <li>Useful for applying OS updates or restarting applications without downtime caused by stopping.</li>
+    <li>Command Example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 reboot-instances --instance-ids i-0123456789abcdef0
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always **backup important data** or take snapshots before stopping or rebooting production instances.</li>
+    <li>Use **Elastic IPs** for instances that require static IPs to avoid connectivity issues after stop/start.</li>
+    <li>Monitor instance health using **CloudWatch** to ensure the instance starts and runs correctly.</li>
+    <li>Automate lifecycle actions using **AWS Systems Manager** for safe operational control.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-lifecycle.png" alt="EC2 Stop Start Reboot Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-custom-ami" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Creating a Custom AMI from an Existing EC2 Instance</h2>
+
+  <p class="mb-4 text-gray-700">
+    A custom Amazon Machine Image (AMI) allows you to reuse a pre-configured EC2 instance with installed software, OS settings, and applications. This is ideal for scaling, automation, or standardizing environments across multiple instances.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Prepare the EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure the instance is in a **healthy running state**.</li>
+    <li>Clean up unnecessary files and clear temporary data to reduce AMI size.</li>
+    <li>Stop services if needed to ensure consistent state in the AMI.</li>
+    <li>Update OS packages and applications to the desired version.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Create AMI via AWS Management Console</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>Navigate to **EC2 → Instances** in the AWS console.</li>
+    <li>Select the instance you want to use as a base.</li>
+    <li>Click **Actions → Image → Create Image**.</li>
+    <li>Provide an **AMI name** and optional description.</li>
+    <li>Choose whether to **include instance volumes** or additional EBS volumes.</li>
+    <li>Click **Create Image** → AWS will start creating the AMI in the background.</li>
+  </ol>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Create AMI via AWS CLI</h3>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-image \
+  --instance-id i-0123456789abcdef0 \
+  --name "MyCustomAMI" \
+  --description "Custom AMI with pre-installed Java and app configuration" \
+  --no-reboot
+  </pre>
+
+  <p class="mt-2 text-gray-600">
+    <strong>Note:</strong> Using <code>--no-reboot</code> avoids stopping the instance but may result in a slightly inconsistent image. Recommended for production only if you have proper safeguards.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Launching Instances from Custom AMI</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use the **new AMI ID** when launching EC2 instances.</li>
+    <li>Example CLI command:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 run-instances \
+  --image-id ami-0abcdef1234567890 \
+  --instance-type t3.medium \
+  --key-name MyKeyPair \
+  --security-group-ids sg-0123456789abcdef0 \
+  --subnet-id subnet-0ab1c2d3e4f567890
+    </pre>
+    <li>This creates a new EC2 instance with all pre-installed software and configurations from your AMI.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Tag AMIs with **version numbers** to track changes and updates.</li>
+    <li>Regularly **update and patch AMIs** for security compliance.</li>
+    <li>Store AMIs in the **same region** as your deployment for faster launches.</li>
+    <li>Clean up old AMIs to avoid unnecessary storage costs.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-custom-ami.png" alt="EC2 Custom AMI Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-ebs-attach-detach" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Attaching and Detaching EBS Volumes Dynamically</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EBS (Elastic Block Store) allows you to attach additional storage to your EC2 instances. You can dynamically attach or detach volumes without stopping the instance (for most volume types), enabling flexible storage scaling.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Attaching an EBS Volume</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Identify the **volume ID** and **instance ID**.</li>
+    <li>Attach the volume using the AWS CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 attach-volume \
+  --volume-id vol-0abcd1234ef567890 \
+  --instance-id i-0123456789abcdef0 \
+  --device /dev/sdf
+    </pre>
+    <li>On Linux, the device will appear (e.g., `/dev/xvdf`) → create a filesystem if new:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo mkfs -t ext4 /dev/xvdf
+sudo mkdir /mnt/data
+sudo mount /dev/xvdf /mnt/data
+    </pre>
+    <li>Add to `/etc/fstab` for automatic mounting after reboot.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Detaching an EBS Volume</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Ensure the volume is **not in use** (unmount the filesystem on Linux):</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo umount /mnt/data
+    </pre>
+    <li>Detach the volume using the AWS CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 detach-volume --volume-id vol-0abcd1234ef567890
+    </pre>
+    <li>Volume becomes available and can be attached to another instance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Considerations and Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>For **root volumes**, detaching requires stopping the instance.</li>
+    <li>Use **EBS snapshots** before detaching important volumes to prevent data loss.</li>
+    <li>Ensure the device path does not conflict with existing devices on the instance.</li>
+    <li>Use **tags** to track which volume belongs to which tenant or workload.</li>
+    <li>For high availability, consider **EBS-optimized instances** and provisioned IOPS (io1/io2) volumes for performance-sensitive workloads.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ebs-attach-detach.png" alt="EC2 EBS Attach Detach Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-ebs-resize" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Resizing an EBS Volume Without Data Loss</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EBS allows you to **dynamically increase the size** of your volume without stopping the EC2 instance, ensuring that your applications continue running with minimal disruption.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Check Current Volume Size</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Identify the **volume ID** attached to your EC2 instance:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 describe-volumes --volume-ids vol-0abcd1234ef567890
+    </pre>
+    <li>Verify current size and type.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Modify the Volume</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use the AWS CLI to increase the volume size:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 modify-volume --volume-id vol-0abcd1234ef567890 --size 50
+    </pre>
+    <li>This command increases the volume to 50 GB (or desired size).</li>
+    <li>Check modification status:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 describe-volumes-modifications --volume-id vol-0abcd1234ef567890
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Expand the Filesystem</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>After modification, resize the filesystem on Linux:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# For ext4 filesystem
+sudo resize2fs /dev/xvdf
+
+# For XFS filesystem
+sudo xfs_growfs /mnt/data
+    </pre>
+    <li>Ensure the mount point matches the device.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Take a **snapshot before resizing** to prevent accidental data loss:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-snapshot --volume-id vol-0abcd1234ef567890 --description "Pre-resize snapshot"
+    </pre>
+    <li>For production workloads, **monitor CloudWatch metrics** for IOPS and throughput during resizing.</li>
+    <li>Resize incrementally if possible to avoid sudden large changes in I/O performance.</li>
+    <li>Ensure the **EC2 instance supports online resizing** (most modern Linux kernels do).</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ebs-resize.png" alt="EC2 EBS Resize Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-storage-config" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Configuring Instance Store vs EBS for Ephemeral vs Persistent Data</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EC2 provides two types of storage: <strong>Instance Store</strong> and <strong>Elastic Block Store (EBS)</strong>. Choosing the right storage type depends on whether your data is **ephemeral** (temporary) or **persistent** (long-term).
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Instance Store (Ephemeral Storage)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attached physically to the host server; provides very **low-latency and high IOPS**.</li>
+    <li>Data is **lost when the instance stops, terminates, or fails**.</li>
+    <li>Ideal for: <strong>caches, temporary files, scratch data, or swap space</strong>.</li>
+    <li>Example configuration:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Launch an instance with instance store volumes via CLI
+aws ec2 run-instances \
+  --image-id ami-0abcdef1234567890 \
+  --instance-type i3.large \
+  --block-device-mappings '[{"DeviceName":"/dev/sdb","VirtualName":"ephemeral0"}]'
+    </pre>
+    <li>The `VirtualName` property specifies ephemeral instance store mapping.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. EBS (Persistent Storage)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Network-attached block storage that persists **even if the instance stops or terminates**.</li>
+    <li>Supports **snapshots**, encryption, and resizing.</li>
+    <li>Ideal for: <strong>databases, application data, logs, and other persistent workloads</strong>.</li>
+    <li>Example configuration:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Launch an instance with EBS root and additional volumes
+aws ec2 run-instances \
+  --image-id ami-0abcdef1234567890 \
+  --instance-type t3.medium \
+  --block-device-mappings '[{"DeviceName":"/dev/xvda","Ebs":{"VolumeSize":20}},{"DeviceName":"/dev/xvdf","Ebs":{"VolumeSize":100}}]'
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. When to Use Which</h3>
+  <table class="table-auto border-collapse border border-gray-300 w-full text-gray-700 mb-4">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="border border-gray-300 px-4 py-2">Storage Type</th>
+        <th class="border border-gray-300 px-4 py-2">Data Persistence</th>
+        <th class="border border-gray-300 px-4 py-2">Use Case</th>
+        <th class="border border-gray-300 px-4 py-2">Example</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Instance Store</td>
+        <td class="border border-gray-300 px-4 py-2">Ephemeral (lost on stop/terminate)</td>
+        <td class="border border-gray-300 px-4 py-2">Temporary files, caches, scratch data</td>
+        <td class="border border-gray-300 px-4 py-2">/tmp cache for web app, Redis ephemeral storage</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">EBS</td>
+        <td class="border border-gray-300 px-4 py-2">Persistent (retains data after stop/terminate)</td>
+        <td class="border border-gray-300 px-4 py-2">Databases, logs, application data</td>
+        <td class="border border-gray-300 px-4 py-2">MySQL data volume, application uploads, S3 backups</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Instance Store** only for temporary, cacheable, or replaceable data.</li>
+    <li>Always store critical data on **EBS** or replicate to **S3** for durability.</li>
+    <li>For hybrid workloads, combine EBS for persistent data and Instance Store for scratch/cache storage.</li>
+    <li>Monitor storage performance and IOPS using **CloudWatch metrics**.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-storage-comparison.png" alt="EC2 Instance Store vs EBS Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-ebs-mount" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Mounting EBS Volumes on Linux and Windows EC2 Instances</h2>
+
+  <p class="mb-4 text-gray-700">
+    After attaching an EBS volume to an EC2 instance, you must mount it to make it usable. The process differs between Linux and Windows instances.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Mounting EBS Volumes on Linux</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach the volume via AWS Console or CLI.</li>
+    <li>Check attached devices:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+lsblk
+    </pre>
+    <li>Create a filesystem if the volume is new:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo mkfs -t ext4 /dev/xvdf
+    </pre>
+    <li>Create a mount point and mount the volume:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo mkdir /mnt/data
+sudo mount /dev/xvdf /mnt/data
+    </pre>
+    <li>To mount automatically at boot, add an entry to <code>/etc/fstab</code>:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+/dev/xvdf /mnt/data ext4 defaults,nofail 0 2
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Mounting EBS Volumes on Windows</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach the volume via AWS Console or CLI.</li>
+    <li>Log in to the instance using **RDP**.</li>
+    <li>Open **Disk Management**:
+      <ul class="list-disc list-inside ml-4">
+        <li>Right-click on **Start → Disk Management**.</li>
+        <li>Find the new disk (usually **Offline** initially), right-click → **Online**.</li>
+        <li>Right-click the disk → **Initialize Disk** (select GPT or MBR).</li>
+        <li>Create a new volume → assign a **drive letter** → format as NTFS.</li>
+      </ul>
+    </li>
+    <li>The volume is now accessible in Windows Explorer using the assigned drive letter.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always **backup critical data** using snapshots before formatting or mounting.</li>
+    <li>Monitor EBS **IOPS and throughput** using CloudWatch metrics for performance-sensitive applications.</li>
+    <li>For Linux, use **UUID in /etc/fstab** instead of device names to avoid remount issues after reboot:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+UUID=$(sudo blkid -s UUID -o value /dev/xvdf)
+echo "UUID=$UUID /mnt/data ext4 defaults,nofail 0 2" | sudo tee -a /etc/fstab
+    </pre>
+    <li>For Windows, assign **meaningful drive letters** for easier management in multi-volume setups.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ebs-mount.png" alt="Mount EBS Volume on Linux and Windows" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-ebs-snapshots" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Backing Up EC2 Volumes Using Snapshots</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon EBS snapshots allow you to **backup your EC2 volumes** to Amazon S3 automatically. Snapshots are incremental, meaning only changed blocks since the last snapshot are saved, reducing storage costs.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Creating a Snapshot via AWS CLI</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Identify the **volume ID** you want to backup.</li>
+    <li>Create a snapshot:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-snapshot \
+  --volume-id vol-0abcd1234ef567890 \
+  --description "Daily backup of my EC2 volume"
+    </pre>
+    <li>Check snapshot status:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 describe-snapshots --snapshot-ids snap-0123456789abcdef0
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Creating a Snapshot via AWS Console</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to **EC2 → Volumes** in AWS Management Console.</li>
+    <li>Select the volume → **Actions → Create Snapshot**.</li>
+    <li>Provide a **description** and optionally add **tags** for identification.</li>
+    <li>Click **Create Snapshot** → AWS will create the snapshot asynchronously.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Scheduling Snapshots</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **AWS Data Lifecycle Manager (DLM)** to automate snapshot creation and deletion:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Example: Create Lifecycle Policy for daily snapshots
+aws dlm create-lifecycle-policy \
+  --description "Daily EBS backup" \
+  --state ENABLED \
+  --execution-role-arn arn:aws:iam::123456789012:role/AWSDataLifecycleManagerDefaultRole \
+  --policy-details '{"ResourceTypes":["VOLUME"],"TargetTags":[{"Key":"Backup","Value":"Daily"}],"Schedules":[{"Name":"DailyBackup","CreateRule":{"Interval":24,"IntervalUnit":"HOURS"},"RetainRule":{"Count":7}}]}'
+    </pre>
+    <li>This automatically retains the last 7 daily snapshots and deletes older ones.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Restoring from a Snapshot</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a new volume from the snapshot:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-volume \
+  --snapshot-id snap-0123456789abcdef0 \
+  --availability-zone us-east-1a
+    </pre>
+    <li>Attach the new volume to an EC2 instance and mount it as usual (Linux/Windows).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Tag snapshots with **purpose, date, and application name** for easier management.</li>
+    <li>Use **incremental snapshots** to save storage costs.</li>
+    <li>Combine snapshots with **EBS encryption** for sensitive data security.</li>
+    <li>Test snapshot restoration periodically to ensure backups are valid.</li>
+    <li>Use **cross-region snapshots** for disaster recovery scenarios.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ebs-snapshot.png" alt="EC2 EBS Snapshot Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-elastic-ip" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Assigning an Elastic IP to a Running EC2 Instance</h2>
+
+  <p class="mb-4 text-gray-700">
+    An Elastic IP (EIP) is a **static, public IPv4 address** designed for dynamic cloud computing. You can attach an EIP to a running EC2 instance to maintain a fixed public IP, even if the instance is stopped or restarted.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Allocate a New Elastic IP</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Using AWS CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 allocate-address --domain vpc
+# Returns: AllocationId and Public IP
+    </pre>
+    <li>Using AWS Console:
+      <ul class="list-disc list-inside ml-4">
+        <li>Go to **EC2 → Network & Security → Elastic IPs**.</li>
+        <li>Click **Allocate Elastic IP address → Allocate**.</li>
+        <li>Note the allocated **Elastic IP address**.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Associate Elastic IP with EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Using AWS CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 associate-address \
+  --instance-id i-0123456789abcdef0 \
+  --allocation-id eipalloc-0abcd1234ef567890
+    </pre>
+    <li>Using AWS Console:
+      <ul class="list-disc list-inside ml-4">
+        <li>Select the allocated Elastic IP → **Actions → Associate Elastic IP address**.</li>
+        <li>Select your **running instance** and optionally the private IP (if multiple).</li>
+        <li>Click **Associate**.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Verify the Association</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check the public IP of the instance:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 describe-instances --instance-ids i-0123456789abcdef0 \
+  --query "Reservations[0].Instances[0].PublicIpAddress"
+    </pre>
+    <li>The output should match your allocated Elastic IP.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Elastic IPs are **free while associated** with a running instance, but **charged if not associated**—release unused EIPs.</li>
+    <li>Use EIPs for **critical applications** that require static public IPs.</li>
+    <li>For **high availability**, consider using **Route 53 DNS with multiple EIPs** in failover scenarios.</li>
+    <li>Always monitor **security groups** to allow traffic from the Elastic IP if needed.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-elastic-ip.png" alt="EC2 Elastic IP Assignment Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-vpc-networking" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Configuring VPC, Subnets, Route Tables, and Security Groups for EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    A well-designed network is critical for EC2 instances. Amazon VPC provides isolation, subnets define network segmentation, route tables control traffic flow, and security groups act as virtual firewalls.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create a VPC</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>VPC is your isolated virtual network for EC2 instances.</li>
+    <li>Example using AWS CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-vpc --cidr-block 10.0.0.0/16
+# Returns VPC ID
+    </pre>
+    <li>Best practice: Tag your VPC with <code>Name</code> for easier identification.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Create Subnets</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Subnets segment your VPC into smaller networks (AZ-specific).</li>
+    <li>Example creating public and private subnets:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Public subnet in us-east-1a
+aws ec2 create-subnet --vpc-id vpc-0123456789abcdef0 --cidr-block 10.0.1.0/24 --availability-zone us-east-1a
+
+# Private subnet in us-east-1a
+aws ec2 create-subnet --vpc-id vpc-0123456789abcdef0 --cidr-block 10.0.2.0/24 --availability-zone us-east-1a
+    </pre>
+    <li>Best practice: Use multiple AZs for high availability.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Configure Route Tables</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Route tables control how traffic flows in and out of subnets.</li>
+    <li>Create a route table for the public subnet:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-route-table --vpc-id vpc-0123456789abcdef0
+aws ec2 create-route --route-table-id rtb-0123456789abcdef0 --destination-cidr-block 0.0.0.0/0 --gateway-id igw-0123456789abcdef0
+aws ec2 associate-route-table --subnet-id subnet-0123456789abcdef0 --route-table-id rtb-0123456789abcdef0
+    </pre>
+    <li>Private subnets do not have a direct route to the internet; they can use a NAT gateway in a public subnet for outbound traffic.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Configure Security Groups</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Security groups act as virtual firewalls for your EC2 instances.</li>
+    <li>Example creating a security group allowing HTTP, HTTPS, and SSH:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-security-group --group-name WebSG --description "Web server SG" --vpc-id vpc-0123456789abcdef0
+
+# Allow HTTP
+aws ec2 authorize-security-group-ingress --group-id sg-0123456789abcdef0 --protocol tcp --port 80 --cidr 0.0.0.0/0
+
+# Allow HTTPS
+aws ec2 authorize-security-group-ingress --group-id sg-0123456789abcdef0 --protocol tcp --port 443 --cidr 0.0.0.0/0
+
+# Allow SSH from your IP
+aws ec2 authorize-security-group-ingress --group-id sg-0123456789abcdef0 --protocol tcp --port 22 --cidr YOUR_IP/32
+    </pre>
+    <li>Best practice: Use least privilege—only allow ports and IPs required for the workload.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Visual Architecture</h3>
+  <div class="mt-4">
+    <img src="images/ec2-vpc-architecture.png" alt="EC2 VPC, Subnets, Route Tables, Security Groups" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **public subnets** for web servers and **private subnets** for databases and application servers.</li>
+    <li>Deploy resources across **multiple AZs** for high availability.</li>
+    <li>Use **security groups and NACLs** together for layered security.</li>
+    <li>Regularly review **route tables and security group rules** for compliance and security hygiene.</li>
+  </ul>
+</section>
+
+
+<section id="ec2-secure-ssh" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Secure SSH Access to EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    Securing SSH access to EC2 instances is critical to prevent unauthorized access. AWS provides two main methods: **Key Pairs** for traditional SSH and **Systems Manager Session Manager** for passwordless and agentless access.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. SSH Using Key Pairs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Key pairs consist of a **private key** you keep securely and a **public key** AWS stores.</li>
+    <li>Steps to enable SSH access:
+      <ul class="list-disc list-inside ml-4">
+        <li>When launching an EC2 instance, select or create a **key pair**.</li>
+        <li>Download the private key file (`.pem`) and store it securely.</li>
+        <li>Set correct permissions for the private key:</li>
+        <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+chmod 400 my-key.pem
+        </pre>
+        <li>SSH into the instance:</li>
+        <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+ssh -i "my-key.pem" ec2-user@<public-ip-or-dns>
+        </pre>
+      </ul>
+    </li>
+    <li>Best Practices:
+      <ul class="list-disc list-inside ml-4">
+        <li>Do **not share** the private key.</li>
+        <li>Use **Security Groups** to restrict SSH access to specific IPs.</li>
+        <li>Rotate key pairs periodically for compliance.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. SSH via Systems Manager Session Manager</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Session Manager allows secure, agentless access to EC2 instances **without opening port 22**.</li>
+    <li>Steps to enable:
+      <ul class="list-disc list-inside ml-4">
+        <li>Attach the **AmazonSSMManagedInstanceCore** IAM role to the EC2 instance.</li>
+        <li>Ensure the instance has internet access (NAT for private subnets) or VPC endpoints for SSM.</li>
+        <li>Access the instance via CLI:</li>
+        <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ssm start-session --target i-0123456789abcdef0
+        </pre>
+        <li>Or via AWS Console: **EC2 → Connect → Session Manager**.</li>
+      </ul>
+    </li>
+    <li>Best Practices:
+      <ul class="list-disc list-inside ml-4">
+        <li>Do **not open SSH ports** in security groups when using Session Manager.</li>
+        <li>Use **IAM policies** to control which users can start sessions.</li>
+        <li>Enable **logging to CloudWatch or S3** for auditing purposes.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Comparison and Recommendations</h3>
+  <table class="table-auto border-collapse border border-gray-300 w-full text-gray-700 mb-4">
+    <thead>
+      <tr class="bg-gray-100">
+        <th class="border border-gray-300 px-4 py-2">Method</th>
+        <th class="border border-gray-300 px-4 py-2">Security</th>
+        <th class="border border-gray-300 px-4 py-2">Use Case</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Key Pairs (SSH)</td>
+        <td class="border border-gray-300 px-4 py-2">Secure if private key is managed properly; requires open port 22</td>
+        <td class="border border-gray-300 px-4 py-2">Traditional access, automation scripts, troubleshooting</td>
+      </tr>
+      <tr>
+        <td class="border border-gray-300 px-4 py-2">Session Manager</td>
+        <td class="border border-gray-300 px-4 py-2">Highly secure; no open ports; IAM-controlled access; fully auditable</td>
+        <td class="border border-gray-300 px-4 py-2">Private instances, audit-compliant environments, zero-trust setups</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="mt-4">
+    <img src="images/ec2-ssh-session-manager.png" alt="EC2 SSH and Session Manager Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-access-control" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Restricting EC2 Access to Specific IP Ranges or VPCs</h2>
+
+  <p class="mb-4 text-gray-700">
+    Limiting access to EC2 instances is critical for security. AWS provides **Security Groups** for instance-level control and **Network ACLs** for subnet-level control.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using Security Groups (SG)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Security Groups act as **stateful firewalls** for your EC2 instances.</li>
+    <li>Allow traffic only from specific IP ranges (CIDR blocks). Example: SSH only from your office IP:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-0123456789abcdef0 \
+  --protocol tcp \
+  --port 22 \
+  --cidr 203.0.113.0/24
+    </pre>
+    <li>Allow access from another VPC using a VPC peering connection:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-0123456789abcdef0 \
+  --protocol tcp \
+  --port 443 \
+  --source-group sg-0abcdef1234567890
+    </pre>
+    <li>Best Practices:
+      <ul class="list-disc list-inside ml-4">
+        <li>Use the **least privilege principle**—only allow required ports and IPs.</li>
+        <li>Regularly audit SG rules to remove unused or overly permissive rules.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Using Network ACLs (NACLs)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>NACLs are **stateless firewalls** applied at the **subnet level**.</li>
+    <li>Example: Allow HTTP/HTTPS only from a corporate IP range:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Inbound rule: allow HTTP
+aws ec2 create-network-acl-entry \
+  --network-acl-id acl-0123456789abcdef0 \
+  --rule-number 100 \
+  --protocol tcp \
+  --port-range From=80,To=80 \
+  --egress false \
+  --cidr-block 203.0.113.0/24 \
+  --rule-action allow
+
+# Inbound rule: deny all others
+aws ec2 create-network-acl-entry \
+  --network-acl-id acl-0123456789abcdef0 \
+  --rule-number 200 \
+  --protocol -1 \
+  --egress false \
+  --cidr-block 0.0.0.0/0 \
+  --rule-action deny
+    </pre>
+    <li>Best Practices:
+      <ul class="list-disc list-inside ml-4">
+        <li>Use NACLs to **enforce subnet-level restrictions** in addition to SGs.</li>
+        <li>Order rules carefully, as NACLs are evaluated by **rule number ascending**.</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Combining Security Groups and NACLs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **SGs** for instance-level access control and **NACLs** for broader subnet-level filtering.</li>
+    <li>Example Scenario:
+      <ul class="list-disc list-inside ml-4">
+        <li>Web servers in public subnet: SG allows 80/443 only, NACL allows only corporate IP range for inbound.</li>
+        <li>Application servers in private subnet: SG allows traffic from web server SG only, NACL blocks all other inbound traffic.</li>
+      </ul>
+    </li>
+    <li>This layered approach increases **security and isolation**.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-access-control.png" alt="EC2 Access Control using SG and NACL" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-load-balancing" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Attaching EC2 Instances to an ALB or NLB</h2>
+
+  <p class="mb-4 text-gray-700">
+    Load Balancers distribute incoming traffic across multiple EC2 instances to improve **availability, fault tolerance, and scalability**. AWS offers **Application Load Balancers (ALB)** for HTTP/HTTPS traffic and **Network Load Balancers (NLB)** for TCP/UDP or extreme performance use cases.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create a Target Group</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Target Groups define which instances or IP addresses receive traffic from the load balancer.</li>
+    <li>Example creating a target group for HTTP on port 80:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-target-group \
+  --name my-web-tg \
+  --protocol HTTP \
+  --port 80 \
+  --vpc-id vpc-0123456789abcdef0 \
+  --target-type instance
+    </pre>
+    <li>For NLB with TCP traffic, change protocol to TCP and target type to <code>instance</code> or <code>ip</code>.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Create the Load Balancer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Example creating an ALB:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-load-balancer \
+  --name my-app-alb \
+  --subnets subnet-0123456789abcdef0 subnet-0abcdef1234567890 \
+  --security-groups sg-0123456789abcdef0 \
+  --scheme internet-facing \
+  --type application
+    </pre>
+    <li>Example creating an NLB:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-load-balancer \
+  --name my-nlb \
+  --subnets subnet-0123456789abcdef0 subnet-0abcdef1234567890 \
+  --type network \
+  --scheme internet-facing
+    </pre>
+    <li>Best practice: Use subnets in **multiple AZs** for high availability.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Register EC2 Instances with Target Group</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach running EC2 instances to the target group:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 register-targets \
+  --target-group-arn arn:aws:elasticloadbalancing:region:account-id:targetgroup/my-web-tg/abcdef1234567890 \
+  --targets Id=i-0123456789abcdef0 Id=i-0abcdef1234567890
+    </pre>
+    <li>Instances must be in the same VPC as the target group.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Configure Listeners</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Listeners define how the LB routes traffic to the target group.</li>
+    <li>Example for ALB listening on HTTP port 80:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-listener \
+  --load-balancer-arn arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/my-app-alb/abcdef1234567890 \
+  --protocol HTTP \
+  --port 80 \
+  --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:region:account-id:targetgroup/my-web-tg/abcdef1234567890
+    </pre>
+    <li>For NLB, protocol is typically TCP or TLS.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **health checks** on target groups to ensure traffic goes only to healthy instances.</li>
+    <li>Deploy instances across **multiple AZs** for high availability.</li>
+    <li>Use **auto scaling groups** with target groups for automatic scaling.</li>
+    <li>Restrict security group rules to allow traffic **only from the load balancer** if possible.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-alb-nlb.png" alt="EC2 Attached to ALB/NLB Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-auto-scaling" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Configuring Auto Scaling Groups for EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    Auto Scaling Groups (ASGs) allow you to automatically **scale EC2 instances up or down** based on demand, improving availability and optimizing costs. ASGs can replace unhealthy instances and maintain a desired number of instances across multiple AZs.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create a Launch Template or Launch Configuration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch Template defines **AMI, instance type, key pair, security groups, and user-data scripts**.</li>
+    <li>Example CLI to create a launch template:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-launch-template \
+  --launch-template-name MyWebServerTemplate \
+  --version-description v1 \
+  --launch-template-data '{
+      "ImageId":"ami-0123456789abcdef0",
+      "InstanceType":"t3.micro",
+      "KeyName":"my-key",
+      "SecurityGroupIds":["sg-0123456789abcdef0"],
+      "UserData":"IyEvYmluL2Jhc2gKZWNobyAiSGVsbG8gZnJvbSBDaGllZiBDaGF0Igo="
+  }'
+    </pre>
+    <li>User-data scripts can bootstrap the instance (e.g., install web server, deploy code).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Create the Auto Scaling Group</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>ASG defines **desired capacity, min/max instances, and AZs**.</li>
+    <li>Example CLI to create an ASG using the launch template:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling create-auto-scaling-group \
+  --auto-scaling-group-name MyWebServerASG \
+  --launch-template "LaunchTemplateName=MyWebServerTemplate,Version=1" \
+  --min-size 2 \
+  --max-size 5 \
+  --desired-capacity 2 \
+  --vpc-zone-identifier "subnet-0123456789abcdef0,subnet-0abcdef1234567890"
+    </pre>
+    <li>Best practice: Deploy across **multiple AZs** for high availability.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Attach Target Groups (Optional, for Load Balancing)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach ASG to an ALB/NLB target group so instances receive traffic automatically:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling attach-load-balancer-target-groups \
+  --auto-scaling-group-name MyWebServerASG \
+  --target-group-arns arn:aws:elasticloadbalancing:region:account-id:targetgroup/my-web-tg/abcdef1234567890
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Configure Scaling Policies</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Scaling policies define **when to add or remove instances** based on metrics.</li>
+    <li>Example: Scale out when CPU > 70%:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name MyWebServerASG \
+  --policy-name ScaleOutPolicy \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration '{"PredefinedMetricSpecification":{"PredefinedMetricType":"ASGAverageCPUUtilization"},"TargetValue":70.0}'
+    </pre>
+    <li>Example: Scale in automatically when CPU drops below 30% (similar policy).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy across **multiple AZs** for fault tolerance.</li>
+    <li>Use **health checks** (EC2 or ELB) to replace unhealthy instances automatically.</li>
+    <li>Combine with **ALB/NLB** for seamless load distribution.</li>
+    <li>Define **min/max/desired** instances carefully to balance cost vs availability.</li>
+    <li>Use **tags** to identify instances created by ASG for monitoring and billing.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-auto-scaling.png" alt="EC2 Auto Scaling Group Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-scaling-policies" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Auto Scaling Policies Based on CPU, Memory, or Custom Metrics</h2>
+
+  <p class="mb-4 text-gray-700">
+    Auto Scaling Groups (ASGs) can scale EC2 instances dynamically based on **predefined metrics** like CPU, memory, or **custom metrics** published to CloudWatch. Scaling policies ensure your application handles traffic efficiently while minimizing costs.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. CPU-Based Scaling</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Common metric: **Average CPU utilization** across the ASG.</li>
+    <li>Example: Scale out if CPU &gt; 70%, scale in if CPU &lt; 30%:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name MyWebServerASG \
+  --policy-name ScaleOutCPU \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration '{
+      "PredefinedMetricSpecification": {
+          "PredefinedMetricType": "ASGAverageCPUUtilization"
+      },
+      "TargetValue": 70.0
+  }'
+
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name MyWebServerASG \
+  --policy-name ScaleInCPU \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration '{
+      "PredefinedMetricSpecification": {
+          "PredefinedMetricType": "ASGAverageCPUUtilization"
+      },
+      "TargetValue": 30.0
+  }'
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Memory-Based Scaling</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Memory metrics are **not reported by default**; you need to publish them to CloudWatch using the CloudWatch agent.</li>
+    <li>Example CloudWatch agent configuration snippet to publish memory usage:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "metrics": {
+    "metrics_collected": {
+      "mem": {
+        "measurement": [
+          "mem_used_percent"
+        ],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
+    </pre>
+    <li>Then create a custom metric in CloudWatch and attach a **TargetTrackingScaling policy**:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name MyWebServerASG \
+  --policy-name ScaleOutMemory \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration '{
+      "CustomizedMetricSpecification": {
+          "MetricName": "MemoryUtilization",
+          "Namespace": "MyApp/Metrics",
+          "Statistic": "Average"
+      },
+      "TargetValue": 75.0
+  }'
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Scaling Based on Custom Metrics</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Custom metrics can include **request count, queue length (SQS), or application-specific metrics**.</li>
+    <li>Publish custom metric to CloudWatch:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-data \
+  --namespace "MyApp/Metrics" \
+  --metric-name "QueueLength" \
+  --value 150
+    </pre>
+    <li>Create a **TargetTrackingScaling policy** on the ASG using this metric:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name MyWebServerASG \
+  --policy-name ScaleOutQueue \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration '{
+      "CustomizedMetricSpecification": {
+          "MetricName": "QueueLength",
+          "Namespace": "MyApp/Metrics",
+          "Statistic": "Average"
+      },
+      "TargetValue": 100.0
+  }'
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Target Tracking** for simpler configuration; step scaling for complex thresholds.</li>
+    <li>Set **cooldown periods** to avoid rapid scaling fluctuations.</li>
+    <li>Combine multiple metrics if needed (CPU + memory + custom metric) for **balanced scaling**.</li>
+    <li>Test scaling policies in **non-production environments** before applying to production.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-scaling-policies.png" alt="EC2 Auto Scaling Metrics Workflow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+<section id="ec2-multi-az" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Deploying Multi-AZ EC2 Instances Behind a Load Balancer</h2>
+
+  <p class="mb-4 text-gray-700">
+    Deploying EC2 instances across multiple Availability Zones (AZs) improves **high availability** and **fault tolerance**. Pairing this with a load balancer ensures traffic is automatically routed to healthy instances, even if one AZ experiences an outage.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Plan Your Subnets Across AZs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create **public subnets** in each AZ for load balancers (ALB/NLB).</li>
+    <li>Create **private subnets** in each AZ for application EC2 instances.</li>
+    <li>Example: For a region with 2 AZs:
+      <ul class="list-disc list-inside ml-4">
+        <li>AZ1: subnet-az1-public, subnet-az1-private</li>
+        <li>AZ2: subnet-az2-public, subnet-az2-private</li>
+      </ul>
+    </li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Launch EC2 Instances in Multiple AZs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch identical EC2 instances in private subnets of each AZ.</li>
+    <li>Example CLI to launch an instance in AZ1:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 run-instances \
+  --image-id ami-0123456789abcdef0 \
+  --count 1 \
+  --instance-type t3.micro \
+  --key-name MyKeyPair \
+  --subnet-id subnet-az1-private \
+  --security-group-ids sg-0123456789abcdef0
+    </pre>
+    <li>Repeat for AZ2 with subnet-az2-private.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Create a Load Balancer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create an **ALB** for HTTP/HTTPS traffic or **NLB** for TCP/UDP traffic.</li>
+    <li>Attach the load balancer to **public subnets** in all AZs to ensure availability.</li>
+    <li>Example CLI for ALB:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-load-balancer \
+  --name my-alb \
+  --subnets subnet-az1-public subnet-az2-public \
+  --security-groups sg-0123456789abcdef0 \
+  --scheme internet-facing \
+  --type application
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Create a Target Group and Register Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a target group in the **same VPC** as your instances.</li>
+    <li>Register EC2 instances from all AZs with this target group:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-target-group \
+  --name my-web-tg \
+  --protocol HTTP \
+  --port 80 \
+  --vpc-id vpc-0123456789abcdef0 \
+  --target-type instance
+
+aws elbv2 register-targets \
+  --target-group-arn arn:aws:elasticloadbalancing:region:account-id:targetgroup/my-web-tg/abcdef1234567890 \
+  --targets Id=i-0123456789abcdef0 Id=i-0abcdef1234567890
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Configure Listener on Load Balancer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a listener to forward traffic from LB to the target group:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 create-listener \
+  --load-balancer-arn arn:aws:elasticloadbalancing:region:account-id:loadbalancer/app/my-alb/abcdef1234567890 \
+  --protocol HTTP \
+  --port 80 \
+  --default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:region:account-id:targetgroup/my-web-tg/abcdef1234567890
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Enable Health Checks</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Configure health checks to route traffic only to healthy instances.</li>
+    <li>Example: HTTP health check on port 80, path `/health`:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 modify-target-group \
+  --target-group-arn arn:aws:elasticloadbalancing:region:account-id:targetgroup/my-web-tg/abcdef1234567890 \
+  --health-check-protocol HTTP \
+  --health-check-port 80 \
+  --health-check-path /health \
+  --health-check-interval-seconds 30 \
+  --healthy-threshold-count 2 \
+  --unhealthy-threshold-count 2
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy EC2 instances in **at least 2 AZs** to tolerate AZ failure.</li>
+    <li>Use **Auto Scaling Groups** to maintain instance count automatically.</li>
+    <li>Attach **ALB/NLB** to distribute traffic evenly across AZs.</li>
+    <li>Enable **CloudWatch monitoring** and alarms for unhealthy instances.</li>
+    <li>Use **security groups** to allow traffic only from the load balancer.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-multi-az-alb.png" alt="Multi-AZ EC2 with Load Balancer Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-ami-update" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Updating AMIs in an Auto Scaling Group with Zero Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    When you need to deploy a **new version of your application** or update the underlying OS, you must update the AMI in your Auto Scaling Group (ASG) **without causing downtime**. This can be achieved with **rolling updates** or **blue/green deployments**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Update the Launch Template or Launch Configuration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a new version of the launch template with the updated AMI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-launch-template-version \
+  --launch-template-name MyWebServerTemplate \
+  --version-description v2 \
+  --launch-template-data '{
+      "ImageId":"ami-0abcdef1234567890",
+      "InstanceType":"t3.micro",
+      "KeyName":"MyKeyPair",
+      "SecurityGroupIds":["sg-0123456789abcdef0"]
+  }'
+    </pre>
+    <li>Verify the new version is available:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 describe-launch-template-versions \
+  --launch-template-name MyWebServerTemplate
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Apply the New Template Version to the ASG</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Update the ASG to use the new launch template version:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling update-auto-scaling-group \
+  --auto-scaling-group-name MyWebServerASG \
+  --launch-template "LaunchTemplateName=MyWebServerTemplate,Version=2"
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Perform a Rolling Update (Recommended for Zero Downtime)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Set **desired capacity equal to max capacity** temporarily or enable **instance refresh**.</li>
+    <li>Example: Start an **instance refresh** to replace old instances gradually:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling start-instance-refresh \
+  --auto-scaling-group-name MyWebServerASG \
+  --preferences '{
+      "MinHealthyPercentage": 75,
+      "InstanceWarmup": 300
+  }'
+    </pre>
+    <li>ASG replaces instances **gradually**, maintaining at least 75% healthy instances at all times.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Blue/Green Deployment Approach</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a **new ASG** with the updated AMI.</li>
+    <li>Attach it to the same **load balancer target group**.</li>
+    <li>Gradually shift traffic from the old ASG to the new ASG using **weighted routing or ALB target group adjustments**.</li>
+    <li>Once traffic is fully routed, **terminate the old ASG**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always test the new AMI in a **staging environment** before production rollout.</li>
+    <li>Enable **health checks** to ensure only healthy instances serve traffic.</li>
+    <li>Use **cooldown periods and MinHealthyPercentage** to prevent service disruption.</li>
+    <li>Consider **CloudWatch alarms** to automatically rollback if failures occur.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ami-update.png" alt="Rolling Update / Blue-Green Deployment for EC2 ASG" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-cloudwatch" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Enabling CloudWatch Monitoring for EC2 Instances</h2>
+
+  <p class="mb-4 text-gray-700">
+    Amazon CloudWatch allows you to **monitor EC2 instance metrics and logs** to ensure your applications are running smoothly, detect anomalies, and trigger automated actions.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Enable Basic Monitoring (Default)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instances automatically send **basic metrics** (CPU utilization, network in/out, disk I/O) every **5 minutes**.</li>
+    <li>No additional setup is required for basic monitoring, but **detailed metrics** provide 1-minute granularity.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Enable Detailed Monitoring</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Detailed monitoring provides **1-minute interval metrics** for faster detection and scaling decisions.</li>
+    <li>Enable via console:
+      <ul class="list-disc list-inside ml-4">
+        <li>Go to EC2 → Instances → Select instance → Actions → Monitor and troubleshoot → Enable detailed monitoring.</li>
+      </ul>
+    </li>
+    <li>Enable via CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 monitor-instances --instance-ids i-0123456789abcdef0
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Install CloudWatch Agent for Custom Metrics and Logs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>CloudWatch Agent can send **memory, disk, swap, and application logs** to CloudWatch.</li>
+    <li>Install agent on Linux instance:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo yum install amazon-cloudwatch-agent -y
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+sudo systemctl start amazon-cloudwatch-agent
+    </pre>
+    <li>On Windows, use the MSI installer and configure via the wizard or JSON config.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Configure Alarms and Notifications</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create CloudWatch alarms to notify you or trigger actions when thresholds are crossed.</li>
+    <li>Example: CPU utilization &gt; 70%:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-alarm \
+  --alarm-name HighCPUUtilization \
+  --metric-name CPUUtilization \
+  --namespace AWS/EC2 \
+  --statistic Average \
+  --period 300 \
+  --threshold 70 \
+  --comparison-operator GreaterThanThreshold \
+  --dimensions Name=InstanceId,Value=i-0123456789abcdef0 \
+  --evaluation-periods 2 \
+  --alarm-actions arn:aws:sns:region:account-id:NotifyMe
+    </pre>
+    <li>Alarms can trigger **Auto Scaling policies, SNS notifications, or Lambda functions** for automated remediation.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **detailed monitoring** for production EC2 instances.</li>
+    <li>Use **CloudWatch agent** to monitor **memory, disk, and application logs**, which are not available by default.</li>
+    <li>Set **alarms on critical metrics** like CPU, memory, disk space, and network latency.</li>
+    <li>Combine CloudWatch with **Auto Scaling Groups** to automatically scale instances based on metrics.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cloudwatch.png" alt="EC2 CloudWatch Monitoring" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-cloudwatch-alarms" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Setting Up CloudWatch Alarms for High CPU, Memory, or Disk Usage</h2>
+
+  <p class="mb-4 text-gray-700">
+    CloudWatch alarms allow you to **monitor critical metrics** for your EC2 instances and trigger notifications or automated actions when thresholds are exceeded. Common metrics include **CPU utilization, memory usage, and disk usage**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. CPU Utilization Alarm</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Default metric: <strong>AWS/EC2 CPUUtilization</strong></li>
+    <li>Example CLI to create an alarm for CPU &gt; 75% for 5 minutes:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-alarm \
+  --alarm-name HighCPUUtilization \
+  --metric-name CPUUtilization \
+  --namespace AWS/EC2 \
+  --statistic Average \
+  --period 300 \
+  --threshold 75 \
+  --comparison-operator GreaterThanThreshold \
+  --dimensions Name=InstanceId,Value=i-0123456789abcdef0 \
+  --evaluation-periods 1 \
+  --alarm-actions arn:aws:sns:region:account-id:NotifyMe
+    </pre>
+    <li>This alarm sends a notification to the specified **SNS topic** or triggers **Auto Scaling actions**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Memory Usage Alarm</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Memory metrics are not collected by default; use **CloudWatch Agent** to publish memory usage.</li>
+    <li>Example agent configuration to publish memory usage:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "metrics": {
+    "metrics_collected": {
+      "mem": {
+        "measurement": [
+          "mem_used_percent"
+        ],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
+    </pre>
+    <li>Create CloudWatch alarm on memory usage &gt; 80%:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-alarm \
+  --alarm-name HighMemoryUsage \
+  --metric-name MemoryUtilization \
+  --namespace "MyApp/Metrics" \
+  --statistic Average \
+  --period 300 \
+  --threshold 80 \
+  --comparison-operator GreaterThanThreshold \
+  --dimensions Name=InstanceId,Value=i-0123456789abcdef0 \
+  --evaluation-periods 1 \
+  --alarm-actions arn:aws:sns:region:account-id:NotifyMe
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Disk Usage Alarm</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch Agent** to publish disk usage metrics.</li>
+    <li>Example configuration to monitor root volume disk usage:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "metrics": {
+    "metrics_collected": {
+      "disk": {
+        "measurement": [
+          "used_percent"
+        ],
+        "resources": [
+          "/"
+        ],
+        "metrics_collection_interval": 60
+      }
+    }
+  }
+}
+    </pre>
+    <li>Create alarm for disk usage &gt; 85%:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-alarm \
+  --alarm-name HighDiskUsage \
+  --metric-name DiskUsedPercent \
+  --namespace "MyApp/Metrics" \
+  --statistic Average \
+  --period 300 \
+  --threshold 85 \
+  --comparison-operator GreaterThanThreshold \
+  --dimensions Name=InstanceId,Value=i-0123456789abcdef0 \
+  --evaluation-periods 1 \
+  --alarm-actions arn:aws:sns:region:account-id:NotifyMe
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always configure **SNS topics** to notify team members or trigger automated actions.</li>
+    <li>Set appropriate **evaluation periods** to avoid false positives from transient spikes.</li>
+    <li>Combine **CPU, memory, and disk alarms** for a complete monitoring strategy.</li>
+    <li>Integrate alarms with **Auto Scaling or Lambda functions** for automated remediation.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cloudwatch-alarms.png" alt="CloudWatch Alarms for EC2" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-cloudwatch-agent" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Installing and Configuring the CloudWatch Agent on EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    The CloudWatch Agent enables you to collect **system-level metrics** (CPU, memory, disk) and **application logs** from EC2 instances. By default, CloudWatch only monitors basic metrics such as CPU and network.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Install CloudWatch Agent on Linux</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Download and install the agent:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo yum install amazon-cloudwatch-agent -y      # Amazon Linux / RHEL
+sudo apt-get install amazon-cloudwatch-agent -y  # Ubuntu / Debian
+    </pre>
+    <li>Start the configuration wizard to create the agent config:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-config-wizard
+    </pre>
+    <li>Start the agent:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo systemctl start amazon-cloudwatch-agent
+sudo systemctl enable amazon-cloudwatch-agent
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Install CloudWatch Agent on Windows</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Download the CloudWatch Agent MSI installer from the <a href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/install-CloudWatch-Agent.html" class="text-indigo-600 hover:underline">AWS documentation</a>.</li>
+    <li>Run the installer and open the configuration wizard via Start Menu → CloudWatch Agent Wizard.</li>
+    <li>Configure metrics and log collection (CPU, memory, disk, application logs).</li>
+    <li>Start the service from Services.msc or PowerShell:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+Start-Service AmazonCloudWatchAgent
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Sample Agent Configuration for Linux</h3>
+  <p class="text-gray-700 mb-2">A JSON config to collect CPU, memory, and root disk usage metrics:</p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "metrics": {
+    "metrics_collected": {
+      "mem": { "measurement": ["mem_used_percent"], "metrics_collection_interval": 60 },
+      "disk": { "measurement": ["used_percent"], "resources": ["/"], "metrics_collection_interval": 60 },
+      "cpu": { "measurement": ["cpu_usage_idle","cpu_usage_user","cpu_usage_system"], "metrics_collection_interval": 60 }
+    }
+  }
+}
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Send Logs to CloudWatch</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Include logs section in the config to send application logs:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          { "file_path": "/var/log/nginx/access.log", "log_group_name": "nginx-access", "log_stream_name": "{instance_id}" },
+          { "file_path": "/var/log/nginx/error.log", "log_group_name": "nginx-error", "log_stream_name": "{instance_id}" }
+        ]
+      }
+    }
+  }
+}
+    </pre>
+    <li>Apply the configuration:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always test your configuration in a **staging instance** before production rollout.</li>
+    <li>Use **IAM roles** with `CloudWatchAgentServerPolicy` attached to EC2 to avoid storing credentials.</li>
+    <li>Monitor **CPU, memory, disk, and custom application logs** for complete observability.</li>
+    <li>Combine with **CloudWatch alarms** to trigger automated notifications or scaling actions.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cloudwatch-agent.png" alt="EC2 CloudWatch Agent Installation" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-log-collection" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Collecting and Centralizing EC2 Logs in CloudWatch Logs or S3</h2>
+
+  <p class="mb-4 text-gray-700">
+    Centralizing logs from EC2 instances helps you **monitor applications**, **debug issues**, and **audit activities**. AWS provides two primary options: **CloudWatch Logs** and **Amazon S3**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Sending Logs to CloudWatch Logs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Install and configure the **CloudWatch Agent** on the EC2 instance (Linux/Windows).</li>
+    <li>Define which log files to collect in the agent JSON configuration:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "logs": {
+    "logs_collected": {
+      "files": {
+        "collect_list": [
+          {
+            "file_path": "/var/log/nginx/access.log",
+            "log_group_name": "nginx-access",
+            "log_stream_name": "{instance_id}"
+          },
+          {
+            "file_path": "/var/log/nginx/error.log",
+            "log_group_name": "nginx-error",
+            "log_stream_name": "{instance_id}"
+          }
+        ]
+      }
+    }
+  }
+}
+    </pre>
+    <li>Apply the configuration and start the agent:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+    </pre>
+    <li>Logs now appear in **CloudWatch Logs** under the configured log groups and streams.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Sending Logs to Amazon S3</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Install the CloudWatch Agent or use a cron job/script to periodically push logs to S3.</li>
+    <li>Example: Upload Nginx logs daily to S3:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws s3 cp /var/log/nginx/access.log s3://my-ec2-logs/nginx/access-$(date +%F).log
+aws s3 cp /var/log/nginx/error.log s3://my-ec2-logs/nginx/error-$(date +%F).log
+    </pre>
+    <li>Use **S3 Lifecycle Policies** to archive or delete old logs automatically to save cost.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Centralizing Logs for Multiple Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use a **single CloudWatch log group** per application and use instance ID as **log stream**.</li>
+    <li>For S3, organize logs using **prefixes** per instance or application:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+s3://my-ec2-logs/<application>/<instance-id>/YYYY/MM/DD/logfile.log
+    </pre>
+    <li>Combine with **AWS Lambda** for processing logs (parsing, alerting, metrics extraction).</li>
+    <li>Optionally, use **CloudWatch Logs Insights** to query and visualize logs in real-time.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **IAM roles** with least privilege for EC2 to send logs to CloudWatch or S3.</li>
+    <li>Set **retention policies** for log groups to avoid unlimited storage costs.</li>
+    <li>For S3, use **encryption (SSE-S3 or SSE-KMS)** for sensitive logs.</li>
+    <li>Centralize logs for multiple instances in a consistent **naming convention** for easier search and analysis.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-log-centralization.png" alt="EC2 Log Centralization in CloudWatch and S3" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-xray" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Tracing EC2 Requests Using AWS X-Ray in Microservices</h2>
+
+  <p class="mb-4 text-gray-700">
+    AWS X-Ray helps you **analyze and debug distributed applications**, including microservices running on EC2 instances. It provides **end-to-end request tracing**, latency breakdowns, and identifies performance bottlenecks.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Install the X-Ray Daemon on EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>The **X-Ray daemon** receives trace data from your application and sends it to X-Ray service.</li>
+    <li>Linux installation example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+curl -O https://s3.us-east-1.amazonaws.com/aws-xray-assets.us-east-1/xray-daemon/aws-xray-daemon-linux-3.x.zip
+unzip aws-xray-daemon-linux-3.x.zip -d /usr/local/bin
+sudo chmod +x /usr/local/bin/xray
+sudo xray &amp;
+    </pre>
+    <li>Windows installation: download the MSI installer from the <a href="https://docs.aws.amazon.com/xray/latest/devguide/xray-daemon.html" class="text-indigo-600 hover:underline">AWS X-Ray Docs</a> and run it as a service.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Configure IAM Role for EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach the **AWSXRayDaemonWriteAccess** policy to the EC2 instance role.</li>
+    <li>This allows the daemon to send trace data to X-Ray without storing AWS credentials.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Instrument Your Application</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **X-Ray SDK** for your programming language (Java, Node.js, Python, etc.).</li>
+    <li>Java example using AWS X-Ray SDK:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+import com.amazonaws.xray.AWSXRay;
+import com.amazonaws.xray.AWSXRayRecorderBuilder;
+import com.amazonaws.xray.strategy.sampling.LocalizedSamplingStrategy;
+
+AWSXRayRecorderBuilder builder = AWSXRayRecorderBuilder.standard()
+    .withSamplingStrategy(new LocalizedSamplingStrategy("sampling-rules.json"));
+AWSXRay.setGlobalRecorder(builder.build());
+
+// Instrument a method
+AWSXRay.beginSegment("ProcessRequest");
+try {
+    // Your business logic here
+} finally {
+    AWSXRay.endSegment();
+}
+    </pre>
+    <li>Node.js example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+const AWSXRay = require('aws-xray-sdk');
+const express = require('express');
+const app = express();
+
+app.use(AWSXRay.express.openSegment('MyApp'));
+
+// Your routes here
+
+app.use(AWSXRay.express.closeSegment());
+app.listen(3000);
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Visualizing Traces</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Open the **X-Ray Console** → Traces to see request flow across EC2 instances and microservices.</li>
+    <li>Identify **latency hotspots, errors, and exceptions** in the service map.</li>
+    <li>Use **filter expressions** to drill down into specific endpoints or EC2 instance traces.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **sampling rules** to avoid high-cost logging for every request.</li>
+    <li>Instrument all **microservices consistently** for complete end-to-end tracing.</li>
+    <li>Combine with **CloudWatch metrics and alarms** for proactive monitoring.</li>
+    <li>Secure your EC2 role with **least privilege** IAM policies for X-Ray access.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-xray-tracing.png" alt="EC2 X-Ray Tracing" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-multi-az" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Deploying EC2 Instances Across Multiple Availability Zones (AZs)</h2>
+
+  <p class="mb-4 text-gray-700">
+    Deploying EC2 instances across multiple AZs improves **high availability and fault tolerance**. If one AZ fails, instances in other AZs continue serving traffic.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Choose a VPC and Subnets</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create or select a VPC with multiple subnets in different AZs.</li>
+    <li>Example: <strong>VPC-12345</strong> with subnets:</li>
+    <ul class="list-disc list-inside ml-4 space-y-1">
+      <li>Subnet-A (AZ us-east-1a)</li>
+      <li>Subnet-B (AZ us-east-1b)</li>
+      <li>Subnet-C (AZ us-east-1c)</li>
+    </ul>
+    <li>Ensure proper **route tables** and **Internet Gateway (IGW)** for public instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Launch EC2 Instances in Each AZ</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch instances using **same AMI and instance type** for uniformity.</li>
+    <li>Example CLI to launch in different AZs:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 run-instances --image-id ami-0abcd1234efgh5678 \
+  --count 1 --instance-type t2.micro --subnet-id subnet-12345 --key-name MyKey
+
+aws ec2 run-instances --image-id ami-0abcd1234efgh5678 \
+  --count 1 --instance-type t2.micro --subnet-id subnet-67890 --key-name MyKey
+    </pre>
+    <li>Assign **security groups** consistently across all instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Use Load Balancer for Traffic Distribution</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create an **Application Load Balancer (ALB)** or **Network Load Balancer (NLB)**.</li>
+    <li>Add **target groups** with instances from multiple AZs.</li>
+    <li>Example: ALB automatically distributes requests across instances in AZ us-east-1a, us-east-1b, and us-east-1c.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Implement Auto Scaling Across AZs</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create an **Auto Scaling Group (ASG)** with subnets in multiple AZs.</li>
+    <li>Specify **desired capacity, min, and max instances**.</li>
+    <li>Enable **health checks** via EC2 and ALB to automatically replace unhealthy instances.</li>
+    <li>Example: ASG spans us-east-1a, us-east-1b, and us-east-1c with 2 instances per AZ.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always distribute instances across **at least 2 AZs** for high availability.</li>
+    <li>Use **Elastic IPs** or **DNS-based routing** for public-facing services.</li>
+    <li>Combine with **CloudWatch alarms** and **Auto Scaling** for automatic recovery.</li>
+    <li>Monitor AZ usage to avoid **single AZ over-provisioning**.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-multi-az.png" alt="EC2 Multi-AZ Deployment" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-auto-recovery" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Setting Up EC2 Auto Recovery for Critical Workloads</h2>
+
+  <p class="mb-4 text-gray-700">
+    EC2 Auto Recovery automatically recovers an instance if it becomes impaired due to **hardware failure or system issues**, minimizing downtime for critical workloads.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Enable CloudWatch Monitoring</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Auto Recovery requires **detailed CloudWatch monitoring** (enabled by default on newer instances).</li>
+    <li>You can enable it via console or CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 monitor-instances --instance-ids i-1234567890abcdef0
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Create a CloudWatch Alarm for Recovery</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to <strong>CloudWatch → Alarms → Create Alarm</strong>.</li>
+    <li>Choose the **EC2 metric**: <strong>StatusCheckFailed_System</strong>.</li>
+    <li>Set threshold: **≥ 1** for 1-2 consecutive periods.</li>
+    <li>In the actions, select <strong>Recover this instance</strong>.</li>
+    <li>Example CLI to create an alarm:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-alarm \
+  --alarm-name "EC2AutoRecovery-i-1234567890abcdef0" \
+  --metric-name StatusCheckFailed_System \
+  --namespace AWS/EC2 \
+  --statistic Maximum \
+  --period 60 \
+  --threshold 1 \
+  --comparison-operator GreaterThanOrEqualToThreshold \
+  --dimensions Name=InstanceId,Value=i-1234567890abcdef0 \
+  --evaluation-periods 2 \
+  --alarm-actions arn:aws:automate:us-east-1:ec2:recover
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Testing Auto Recovery</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Simulate a system failure by stopping critical processes or using EC2 Recovery simulation tools.</li>
+    <li>Verify that CloudWatch triggers the **Recover action** and the instance is rebooted on a healthy host.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **IAM roles** with permissions for CloudWatch and EC2 actions.</li>
+    <li>Combine with **Multi-AZ deployment** for additional redundancy.</li>
+    <li>Enable **detailed monitoring** to improve detection and reduce recovery time.</li>
+    <li>Use **CloudWatch Logs** and alarms to monitor recovery events.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-auto-recovery.png" alt="EC2 Auto Recovery Setup" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+<section id="ec2-backup-restore" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Backing Up EC2 Data and Restoring in Another Region</h2>
+
+  <p class="mb-4 text-gray-700">
+    Backing up EC2 data ensures **disaster recovery, business continuity, and cross-region replication**. AWS provides **EBS snapshots** and **AMIs** to backup instances and restore them in another region.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create an EBS Snapshot</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Stop the EC2 instance (optional but recommended for consistent data).</li>
+    <li>Create a snapshot of the attached EBS volume:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-snapshot \
+  --volume-id vol-0123456789abcdef0 \
+  --description "Backup of EC2 data"
+    </pre>
+    <li>Snapshot ID will be returned, e.g., <code>snap-0abc1234def5678gh</code>.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Copy Snapshot to Another Region</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use the snapshot ID to copy it to another region:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 copy-snapshot \
+  --source-region us-east-1 \
+  --source-snapshot-id snap-0abc1234def5678gh \
+  --destination-region us-west-2 \
+  --description "Cross-region backup of EC2 data"
+    </pre>
+    <li>The copied snapshot in the destination region will have a new snapshot ID.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Restore EC2 Data in Another Region</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a new volume from the snapshot in the destination region:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-volume \
+  --region us-west-2 \
+  --snapshot-id snap-0xyz9876abc54321def \
+  --availability-zone us-west-2a \
+  --volume-type gp3
+    </pre>
+    <li>Launch a new EC2 instance in the destination region.</li>
+    <li>Attach the restored volume to the instance:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 attach-volume \
+  --volume-id vol-0abcdef1234567890 \
+  --instance-id i-0abcdef1234567890 \
+  --device /dev/sdf
+    </pre>
+    <li>Mount the volume inside the EC2 instance to access the data.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Using AMI for Full Instance Backup</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create an AMI of the EC2 instance:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-image \
+  --instance-id i-0123456789abcdef0 \
+  --name "EC2Backup-AMI" \
+  --no-reboot
+    </pre>
+    <li>Copy the AMI to another region:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 copy-image \
+  --source-region us-east-1 \
+  --source-image-id ami-0abc1234def5678gh \
+  --region us-west-2 \
+  --name "EC2Backup-AMI-Copy"
+    </pre>
+    <li>Launch a new EC2 instance from the copied AMI in the destination region.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Automate backups using **AWS Backup** or CloudWatch Events.</li>
+    <li>Encrypt snapshots and AMIs for sensitive data using **KMS keys**.</li>
+    <li>Regularly test **restore procedures** to ensure reliability.</li>
+    <li>Use consistent **naming conventions** for snapshots and AMIs across regions.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cross-region-backup.png" alt="EC2 Cross-Region Backup and Restore" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-blue-green" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Blue-Green Deployment for EC2 Services</h2>
+
+  <p class="mb-4 text-gray-700">
+    Blue-Green Deployment is a **release management strategy** where two identical environments (Blue and Green) exist. One environment serves production traffic while the other is idle or used for staging. This approach allows **zero-downtime deployments** and easy rollback.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Setup Blue and Green Environments</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create two identical EC2 environments (Blue and Green) with the same **VPC, subnets, security groups, and load balancers**.</li>
+    <li>Example: Blue environment runs current production, Green is idle for staging new release.</li>
+    <li>Both environments should have the same **database connection**, or use **read replicas** to avoid data conflicts during testing.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Deploy New Version to Green Environment</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Deploy the new application version on EC2 instances in the Green environment.</li>
+    <li>Perform **integration tests, performance checks, and monitoring** in Green.</li>
+    <li>Example CLI to deploy via CodeDeploy:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws deploy create-deployment \
+  --application-name MyApp \
+  --deployment-group-name GreenDeploymentGroup \
+  --s3-location bucket=mybucket,key=myapp-v2.zip,bundleType=zip
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Switch Traffic Using Load Balancer</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Point the **ALB/NLB** from Blue to Green environment after verification.</li>
+    <li>Example: Update **target group** of ALB to include Green EC2 instances:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 modify-target-group-attributes \
+  --target-group-arn arn:aws:elasticloadbalancing:...:targetgroup/green-tg \
+  --attributes Key=deregistration_delay.timeout_seconds,Value=30
+    </pre>
+    <li>Monitor traffic and logs to ensure the application behaves correctly.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Rollback Strategy</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>If issues occur in Green, switch back to Blue using the load balancer.</li>
+    <li>No downtime occurs because Blue environment is still running production traffic.</li>
+    <li>Rollback CLI example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws elbv2 modify-listener \
+  --listener-arn arn:aws:elasticloadbalancing:...:listener/app/my-alb/50dc6c495c0c9188 \
+  --default-actions Type=forward,TargetGroupArn=blue-target-group-arn
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Infrastructure as Code** (CloudFormation/Terraform) to maintain consistent environments.</li>
+    <li>Automate **deployment, testing, and traffic switching** to reduce human error.</li>
+    <li>Keep **databases backward compatible** to allow smooth switch between environments.</li>
+    <li>Combine with **Auto Scaling Groups** to scale EC2 instances in both environments automatically.</li>
+    <li>Monitor with **CloudWatch, X-Ray, and logs** for early detection of issues.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-blue-green.png" alt="EC2 Blue-Green Deployment" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-migration" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Migrating On-Premises Servers to EC2 with Minimal Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    Migrating on-premises Linux or Windows servers to EC2 requires careful planning to ensure **minimal downtime**. AWS provides tools like **AWS Application Migration Service (MGN)**, **Server Migration Service (SMS)**, and **AMI import/export**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Assessment and Planning</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Identify workloads, OS types, storage, network dependencies, and critical applications.</li>
+    <li>Estimate EC2 instance types and storage volumes required for migration.</li>
+    <li>Plan **cutover windows** and fallback strategy in case of issues.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Choose Migration Tool</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li><strong>AWS Application Migration Service (MGN)</strong> - replicates live servers to EC2 with minimal downtime.</li>
+    <li><strong>AWS Server Migration Service (SMS)</strong> - schedules incremental replication of virtual machines.</li>
+    <li><strong>VM Import/Export</strong> - converts on-prem VMs to EC2 AMIs for manual launch.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Continuous Replication</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Set up the migration tool to continuously replicate **disk data and configuration** from on-prem to AWS.</li>
+    <li>This ensures the EC2 instance is nearly up-to-date before cutover.</li>
+    <li>Example: With MGN, replicated instances remain in **“ready” state** while on-prem continues to serve traffic.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Testing the Migration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch EC2 test instances from replicated data without affecting on-prem production.</li>
+    <li>Validate **application functionality, network connectivity, and security group rules**.</li>
+    <li>Check database consistency and service dependencies.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Cutover to EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Schedule a **short downtime window** or maintenance period.</li>
+    <li>Stop the replication on on-prem server.</li>
+    <li>Launch the EC2 instance using the latest replicated snapshot.</li>
+    <li>Update DNS or load balancer to point to EC2 instance for production traffic.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Validation and Cleanup</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Monitor logs, metrics, and application performance.</li>
+    <li>Decommission on-prem servers if migration is successful.</li>
+    <li>Implement **backups, CloudWatch monitoring, and Auto Scaling** for EC2 workloads.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Test migration in a **staging environment** first.</li>
+    <li>Replicate **critical workloads incrementally** for minimal downtime.</li>
+    <li>Ensure **IAM roles, security groups, and network ACLs** match production requirements.</li>
+    <li>Keep **rollback plan** ready in case of unforeseen issues during cutover.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-migration.png" alt="EC2 On-Prem Migration" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-iam-roles" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Attaching IAM Roles to EC2 Instances for Secure AWS Access</h2>
+
+  <p class="mb-4 text-gray-700">
+    IAM roles allow EC2 instances to securely access AWS services like **S3, DynamoDB, or SNS** without embedding credentials in the application. Roles provide **temporary, automatically rotated credentials**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create an IAM Role for EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to the AWS console: <strong>IAM → Roles → Create Role</strong>.</li>
+    <li>Select **AWS service → EC2** as the trusted entity.</li>
+    <li>Attach a policy that grants the required permissions, e.g., for S3 access:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-bucket",
+        "arn:aws:s3:::my-bucket/*"
+      ]
+    }
+  ]
+}
+    </pre>
+    <li>Give the role a descriptive name, e.g., <code>EC2-S3-Access-Role</code>.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Attach IAM Role to EC2 Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>While launching a new EC2 instance, in the **Configure Instance** step, select the IAM role under **IAM role**.</li>
+    <li>For existing instances, attach the role using the console or CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 associate-iam-instance-profile \
+  --instance-id i-0123456789abcdef0 \
+  --iam-instance-profile Name=EC2-S3-Access-Role
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Access AWS Services from EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>No access keys or credentials are required in the instance.</li>
+    <li>Use AWS SDK or CLI; temporary credentials are automatically provided via **Instance Metadata Service (IMDS)**:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# List objects in S3 bucket from EC2
+aws s3 ls s3://my-bucket
+
+# Access DynamoDB table
+aws dynamodb scan --table-name MyTable
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **least privilege principle**: grant only required permissions.</li>
+    <li>Do **not store AWS credentials** in EC2 environment variables or files.</li>
+    <li>Monitor role usage with **CloudTrail** to audit access.</li>
+    <li>Use **different roles per application/service** to isolate permissions.</li>
+    <li>Ensure **IMDSv2** is enforced for improved security.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-iam-role.png" alt="EC2 IAM Role for S3 Access" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-ebs-encryption" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Encrypting EBS Volumes for Sensitive Workloads</h2>
+
+  <p class="mb-4 text-gray-700">
+    Encrypting EBS volumes ensures that data at rest is protected. AWS provides **server-side encryption** using **AWS Key Management Service (KMS)** keys. This is critical for sensitive workloads such as financial, healthcare, or confidential applications.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create an Encrypted EBS Volume</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a new volume in the AWS console and check <strong>Enable Encryption</strong>.</li>
+    <li>Choose a KMS key: <strong>AWS-managed key (default)</strong> or your **customer-managed key** for more control.</li>
+    <li>CLI example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-volume \
+  --availability-zone us-east-1a \
+  --size 20 \
+  --volume-type gp3 \
+  --encrypted \
+  --kms-key-id arn:aws:kms:us-east-1:123456789012:key/abcd-ef12-3456
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Encrypt Existing EBS Volumes</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Existing volumes cannot be encrypted in place. Use **snapshot and restore** method:</li>
+    <ol class="list-decimal list-inside ml-4 space-y-1 text-gray-700">
+      <li>Create a snapshot of the unencrypted volume:</li>
+      <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-snapshot --volume-id vol-0123456789abcdef0 --description "Backup before encryption"
+      </pre>
+      <li>Copy the snapshot with encryption enabled:</li>
+      <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 copy-snapshot \
+  --source-region us-east-1 \
+  --source-snapshot-id snap-0abc1234def5678gh \
+  --encrypted \
+  --kms-key-id arn:aws:kms:us-east-1:123456789012:key/abcd-ef12-3456
+      </pre>
+      <li>Create a new EBS volume from the encrypted snapshot and attach to your instance.</li>
+    </ol>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Automatic Encryption for New Volumes</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **default EBS encryption** for your AWS account in a region so all new volumes are encrypted automatically.</li>
+    <li>Console path: <strong>EC2 → Account Attributes → EBS Encryption → Enable</strong>.</li>
+    <li>CLI example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 enable-ebs-encryption-by-default
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **customer-managed KMS keys** for better access control and auditing.</li>
+    <li>Encrypt both **root and data volumes** for sensitive workloads.</li>
+    <li>Regularly **rotate KMS keys** to comply with security policies.</li>
+    <li>Ensure **backup snapshots** are encrypted and access-controlled.</li>
+    <li>Combine with **security groups, IAM roles, and monitoring** for complete data protection.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ebs-encryption.png" alt="EC2 EBS Encryption" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-secret-rotation" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Rotating Secrets for EC2 Without Downtime</h2>
+
+  <p class="mb-4 text-gray-700">
+    Applications running on EC2 often require sensitive information like database credentials, API keys, or certificates. To maintain security, secrets must be **rotated periodically** without causing downtime. AWS Secrets Manager or Parameter Store can be used for automated rotation.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Use AWS Secrets Manager</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create a secret in Secrets Manager for your credentials (e.g., DB username/password).</li>
+    <li>Enable automatic rotation with a Lambda function or use AWS-provided rotation templates.</li>
+    <li>Example: Create a secret and enable rotation for RDS:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws secretsmanager create-secret \
+  --name MyDatabaseSecret \
+  --description "DB credentials for production app" \
+  --secret-string '{"username":"dbuser","password":"DbPass123!"}' \
+  --tags Key=Environment,Value=Production
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Access Secrets from EC2 Securely</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach an **IAM role** to the EC2 instance with permissions to read the secret:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+{
+  "Effect": "Allow",
+  "Action": ["secretsmanager:GetSecretValue"],
+  "Resource": "arn:aws:secretsmanager:region:account-id:secret:MyDatabaseSecret-*"
+}
+    </pre>
+    <li>Retrieve secrets at runtime using AWS SDK or CLI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Example in Linux EC2
+aws secretsmanager get-secret-value --secret-id MyDatabaseSecret
+    </pre>
+    <li>Do not store secrets in environment variables or config files permanently.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Implement Zero-Downtime Rotation</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Design your application to **fetch secrets dynamically** from Secrets Manager at runtime.</li>
+    <li>Enable **rotation Lambda** to update secrets in the backend (e.g., database) while EC2 instances continue using current secret until refreshed.</li>
+    <li>Use caching with a **short TTL** (e.g., 60 seconds) so application reads new secrets automatically without restart.</li>
+    <li>Example flow:</li>
+    <ol class="list-decimal list-inside ml-4 space-y-1 text-gray-700">
+      <li>Lambda rotates DB password in Secrets Manager.</li>
+      <li>Application fetches updated secret on next request or after TTL expires.</li>
+      <li>No downtime occurs; EC2 instance continues processing requests with old secret until new secret is available.</li>
+    </ol>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **IAM roles** instead of hard-coded credentials.</li>
+    <li>Enable **automatic rotation** in Secrets Manager or use Lambda functions.</li>
+    <li>Use **caching with short TTL** to avoid frequent API calls but allow quick secret refresh.</li>
+    <li>Audit access with **CloudTrail** to monitor which EC2 instances accessed secrets.</li>
+    <li>Test secret rotation in **staging environment** before production rollout.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-secret-rotation.png" alt="EC2 Secret Rotation Flow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-audit" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Auditing EC2 Access and Logging User Actions</h2>
+
+  <p class="mb-4 text-gray-700">
+    Auditing EC2 access is critical for **security and compliance**. AWS provides tools such as <strong>CloudTrail, CloudWatch Logs, and VPC Flow Logs</strong> to monitor, record, and analyze actions performed on EC2 instances and related resources.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Enable AWS CloudTrail</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>CloudTrail records **API calls** made to AWS services, including EC2.</li>
+    <li>Log all management events (StartInstances, StopInstances, ModifySecurityGroups, etc.).</li>
+    <li>Steps:</li>
+    <ol class="list-decimal list-inside ml-4 space-y-1 text-gray-700">
+      <li>Go to <strong>AWS Console → CloudTrail → Trails → Create Trail</strong>.</li>
+      <li>Enable logging for **all regions**.</li>
+      <li>Store logs in an **S3 bucket** with restricted access.</li>
+    </ol>
+    <li>CLI example to create a trail:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudtrail create-trail \
+  --name EC2-Audit-Trail \
+  --s3-bucket-name my-ec2-audit-logs \
+  --is-multi-region-trail
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Monitor EC2 Access with CloudWatch</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create **CloudWatch Alarms** for suspicious activities (e.g., unauthorized Start/Stop actions).</li>
+    <li>Forward CloudTrail events to CloudWatch Logs for **real-time monitoring**.</li>
+    <li>Example: Filter failed SSH login attempts using CloudWatch Logs Insights:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+fields @timestamp, @message
+| filter @message like /Failed password/
+| sort @timestamp desc
+| limit 20
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Enable VPC Flow Logs for Network Auditing</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>VPC Flow Logs capture **IP traffic** to/from EC2 instances, helping detect unauthorized access or unusual traffic patterns.</li>
+    <li>Create a Flow Log in the VPC, subnet, or network interface level and store logs in **CloudWatch Logs or S3**.</li>
+    <li>CLI example:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-flow-logs \
+  --resource-type VPC \
+  --resource-ids vpc-0123456789abcdef0 \
+  --traffic-type ALL \
+  --log-destination-type cloud-watch-logs \
+  --log-group-name EC2-VPC-FlowLogs
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Use IAM Policies for Auditing</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **least-privilege access** for users and applications.</li>
+    <li>Attach IAM policies that **log all actions** and allow CloudTrail to capture them.</li>
+    <li>Use **IAM Access Analyzer** to detect unused or overly permissive permissions.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Centralize logs in an **S3 bucket with versioning and MFA delete enabled**.</li>
+    <li>Enable **CloudTrail Insights** to detect unusual API activity.</li>
+    <li>Regularly review CloudWatch alarms and VPC Flow Logs for **suspicious patterns**.</li>
+    <li>Automate reporting and alerting for compliance audits.</li>
+    <li>Integrate with **SIEM tools** for advanced analysis.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-audit.png" alt="EC2 Access Auditing" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+<section id="ec2-ami-hardening" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Hardening EC2 AMIs for Security Best Practices</h2>
+
+  <p class="mb-4 text-gray-700">
+    Hardening an Amazon Machine Image (AMI) ensures that EC2 instances launched from it are secure, compliant, and resistant to attacks. This includes operating system configuration, patching, access controls, and monitoring.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Start with a Minimal Base AMI</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Choose the latest AWS-managed or vendor-provided AMI.</li>
+    <li>Prefer **minimal images** to reduce attack surface (e.g., Amazon Linux 2 minimal, Ubuntu Server minimal).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Apply OS Updates and Security Patches</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Update the operating system and installed packages:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# For Amazon Linux / RHEL
+sudo yum update -y
+
+# For Ubuntu / Debian
+sudo apt update && sudo apt upgrade -y
+    </pre>
+    <li>Regularly maintain and rebuild AMIs to include the latest patches.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Configure Secure Access</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **SSH key pairs** for authentication; disable password login:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart sshd
+    </pre>
+    <li>Enforce **strong IAM roles** for AWS API access instead of embedding credentials.</li>
+    <li>Configure **sudo access** carefully; only grant to required users.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Install and Configure Security Tools</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable **firewall rules** using security groups and OS-level firewalls (iptables, ufw).</li>
+    <li>Install intrusion detection tools like **OSSEC, Wazuh, or Amazon Inspector**.</li>
+    <li>Configure **CloudWatch Logs** for system and application log monitoring.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Remove Unnecessary Services and Software</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Uninstall packages and services not required for your workload.</li>
+    <li>Disable default accounts and services that could be exploited.</li>
+    <li>Ensure default ports are closed unless explicitly needed.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Harden File System and Permissions</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Set strict permissions on sensitive files:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo chmod 600 /etc/ssh/ssh_host_*
+sudo chmod 700 /home/ec2-user
+    </pre>
+    <li>Use **encrypted EBS volumes** for sensitive data.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">7. Audit and Compliance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Run **AWS Inspector** or CIS benchmarks to verify security compliance.</li>
+    <li>Enable **CloudTrail** for auditing API calls.</li>
+    <li>Regularly review and update AMI hardening procedures.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">8. Create the Hardened AMI</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>After configuring and securing the instance, create a custom AMI:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 create-image \
+  --instance-id i-0123456789abcdef0 \
+  --name "Hardened-EC2-AMI" \
+  --description "AMI hardened according to security best practices" \
+  --no-reboot
+    </pre>
+    <li>Use this AMI for launching production workloads to ensure consistent security baseline.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ami-hardening.png" alt="EC2 AMI Hardening Process" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-user-data" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Bootstrapping EC2 Instances with User-Data Scripts</h2>
+
+  <p class="mb-4 text-gray-700">
+    AWS EC2 allows you to **automatically configure instances during launch** using <strong>user-data scripts</strong>. This is commonly used to install software, apply updates, or configure services without manual intervention.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. User-Data Basics</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>User-data is **executed only at the first boot** of the instance.</li>
+    <li>Supports **shell scripts (Linux)** and **PowerShell scripts (Windows)**.</li>
+    <li>Can include cloud-init directives for advanced configuration.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Example: Bootstrapping a Linux EC2 Instance</h3>
+  <p class="text-gray-700 mb-2">Install updates, Apache server, and a sample web page:</p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+#!/bin/bash
+# Update OS packages
+yum update -y
+
+# Install Apache HTTP server
+yum install httpd -y
+
+# Start Apache service
+systemctl start httpd
+systemctl enable httpd
+
+# Create a sample index.html
+echo "&lt;h1&gt;Welcome to My EC2 Instance&lt;/h1&gt;" &gt; /var/www/html/index.html
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Adding User-Data via AWS Console</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-1 text-gray-700">
+    <li>Go to <strong>EC2 → Launch Instance → Configure Instance</strong>.</li>
+    <li>Scroll down to the <strong>User Data</strong> section.</li>
+    <li>Paste your script and select <strong>As text</strong>.</li>
+    <li>Complete instance launch. Script executes automatically on first boot.</li>
+  </ol>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Adding User-Data via CLI</h3>
+  <p class="text-gray-700 mb-2">Example: Launch an EC2 instance with a shell script as user-data:</p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 run-instances \
+  --image-id ami-0123456789abcdef0 \
+  --count 1 \
+  --instance-type t2.micro \
+  --key-name MyKeyPair \
+  --security-group-ids sg-0123456789abcdef0 \
+  --subnet-id subnet-0123456789abcdef0 \
+  --user-data file://bootstrap.sh
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Keep scripts **idempotent**—safe to run multiple times without causing errors.</li>
+    <li>Use **logging** to /var/log/cloud-init-output.log for troubleshooting.</li>
+    <li>Store sensitive information in **Secrets Manager**; avoid hardcoding passwords in user-data.</li>
+    <li>For complex setups, consider **configuration management tools** (Ansible, Chef, Puppet) triggered via user-data.</li>
+    <li>Test scripts in a **staging environment** before production launch.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-user-data.png" alt="EC2 User-Data Bootstrapping" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-container-apps" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Running Containerized Applications on EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    Containerized applications allow consistent deployment across environments. You can run containers manually on EC2 using **Docker**, or use **Amazon ECS (Elastic Container Service)** for orchestration.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using Docker Manually on EC2</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Launch an EC2 instance with a supported OS (Amazon Linux 2, Ubuntu, etc.).</li>
+    <li>Install Docker:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Amazon Linux 2
+sudo amazon-linux-extras install docker -y
+sudo service docker start
+sudo usermod -a -G docker ec2-user
+    </pre>
+    <li>Pull and run a container, e.g., Nginx:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+docker pull nginx:latest
+docker run -d -p 80:80 --name webserver nginx:latest
+    </pre>
+    <li>Access your containerized app via the EC2 public IP.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Running Containers with ECS (EC2 Launch Type)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Install **ECS agent** on EC2 instances:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Amazon Linux 2 ECS-optimized AMI already includes ECS agent
+# For custom AMI, install agent manually
+sudo yum install -y ecs-init
+sudo systemctl enable --now ecs
+    </pre>
+    <li>Create an ECS cluster and register your EC2 instance:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ecs create-cluster --cluster-name MyECSCluster
+# Assign EC2 instances to cluster using ECS configuration
+    </pre>
+    <li>Define a **task definition** with container image, ports, and resources.</li>
+    <li>Run the task on your ECS cluster:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ecs run-task \
+  --cluster MyECSCluster \
+  --launch-type EC2 \
+  --task-definition my-task-def
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **ECS-optimized AMIs** for easier setup.</li>
+    <li>Define **task CPU/memory limits** to avoid over-provisioning.</li>
+    <li>Use **Security Groups** to restrict access to container ports.</li>
+    <li>Leverage **CloudWatch Logs** for container log monitoring.</li>
+    <li>Consider **ECS Service** for long-running, auto-restarting containers.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-ecs-docker.png" alt="EC2 Containerized Apps Flow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-cicd" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">CI/CD Pipeline to Deploy Code to EC2 Instances</h2>
+
+  <p class="mb-4 text-gray-700">
+    Automating deployments to EC2 improves efficiency, reduces errors, and ensures consistent environments. Common tools include **GitHub Actions, AWS CodePipeline, Jenkins, and Ansible**.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Architecture Overview</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>**Source Control**: GitHub, GitLab, or CodeCommit holds your application code.</li>
+    <li>**Build Stage**: Compile code, run tests, and create artifacts (e.g., JAR, WAR, Docker image).</li>
+    <li>**Deploy Stage**: Push artifacts to EC2 instances automatically.</li>
+    <li>Optionally use **Load Balancers** and **Auto Scaling** to deploy across multiple instances without downtime.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Example: GitHub Actions Deploying to EC2</h3>
+  <p class="text-gray-700 mb-2">Workflow steps:</p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+name: CI-CD to EC2
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+
+      - name: Build Project
+        run: mvn clean package
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          script: |
+            sudo systemctl stop my-app
+            cp /home/ec2-user/app/target/my-app.jar /opt/my-app/my-app.jar
+            sudo systemctl start my-app
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Using AWS CodePipeline</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>**Source Stage**: Pull code from CodeCommit, GitHub, or S3.</li>
+    <li>**Build Stage**: Use CodeBuild to compile, test, and package the application.</li>
+    <li>**Deploy Stage**: Use CodeDeploy to push the artifact to EC2 instances.</li>
+    <li>Supports **blue-green or rolling deployments** for zero downtime.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Store SSH keys or credentials securely in **GitHub Secrets or AWS Secrets Manager**.</li>
+    <li>Automate testing in the build stage to catch errors early.</li>
+    <li>Use **tags or naming conventions** to track deployments.</li>
+    <li>Integrate **CloudWatch or SNS notifications** for success/failure alerts.</li>
+    <li>For multiple instances, use **Ansible, Chef, or AWS Systems Manager Run Command** to deploy simultaneously.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-cicd.png" alt="CI/CD Pipeline to EC2" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-scaling" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Scaling EC2-Based Microservices for Unpredictable Traffic</h2>
+
+  <p class="mb-4 text-gray-700">
+    Microservices running on EC2 instances must handle **unpredictable traffic patterns** efficiently. AWS provides **Auto Scaling Groups (ASG), Load Balancers, and CloudWatch metrics** to automatically adjust compute capacity.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Horizontal Scaling with Auto Scaling Groups</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Create an **Auto Scaling Group** with a minimum, desired, and maximum number of EC2 instances.</li>
+    <li>Attach an **Application Load Balancer (ALB)** to distribute traffic evenly.</li>
+    <li>Define **scaling policies** triggered by CloudWatch metrics like CPU, memory, or request count.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Vertical Scaling (Instance Resize)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Change the instance type (e.g., t3.medium → m5.large) for higher capacity.</li>
+    <li>Vertical scaling often requires stopping the instance, so it’s less ideal for real-time traffic spikes.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Metrics and Scaling Triggers</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>**CPUUtilization**: Increase instances when average CPU > 70%.</li>
+    <li>**Memory Utilization**: Custom CloudWatch metrics can track memory usage.</li>
+    <li>**Request Count / Latency**: ALB metrics can trigger scaling for high load.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Load Balancing</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **ALB** for HTTP/HTTPS traffic distribution.</li>
+    <li>Use **NLB** for TCP/UDP or low-latency traffic.</li>
+    <li>Ensure **health checks** are configured to remove unhealthy instances from the load balancer.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Auto Scaling Strategies for Unpredictable Traffic</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>**Dynamic Scaling**: Scale out/in based on real-time metrics.</li>
+    <li>**Scheduled Scaling**: Scale for predictable traffic patterns (e.g., peak hours).</li>
+    <li>**Target Tracking Scaling**: Maintain a target metric (CPU < 60%) automatically.</li>
+    <li>Combine **On-Demand, Reserved, and Spot Instances** for cost optimization while handling spikes.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example: Dynamic Scaling Policy</h3>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws autoscaling put-scaling-policy \
+  --auto-scaling-group-name MyMicroserviceASG \
+  --policy-name ScaleOutPolicy \
+  --policy-type TargetTrackingScaling \
+  --target-tracking-configuration file://target-tracking.json
+  </pre>
+  <p class="text-gray-700 mt-2">
+    Where <code>target-tracking.json</code> contains the metric type (CPUUtilization) and target value.
+  </p>
+
+  <div class="mt-4">
+    <img src="images/ec2-scaling.png" alt="EC2 Microservices Auto Scaling" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-event-driven" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Integrating EC2 with SQS, SNS, and Lambda for Event-Driven Architectures</h2>
+
+  <p class="mb-4 text-gray-700">
+    Event-driven architectures decouple components and enable asynchronous processing. EC2 instances can **produce or consume events** via AWS messaging services like SQS, SNS, and Lambda.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using SQS (Simple Queue Service)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 can send messages to SQS for **asynchronous processing**:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws sqs send-message \
+  --queue-url https://sqs.us-east-1.amazonaws.com/123456789012/MyQueue \
+  --message-body "Process this task"
+    </pre>
+    <li>EC2 can also poll messages using SDK or CLI and process them:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws sqs receive-message --queue-url MyQueue --max-number-of-messages 5
+    </pre>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Using SNS (Simple Notification Service)</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 instances can **publish events to SNS topics** for fan-out to multiple subscribers:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws sns publish \
+  --topic-arn arn:aws:sns:us-east-1:123456789012:MyTopic \
+  --message "New user registered"
+    </pre>
+    <li>Subscribers can include **SQS queues, Lambda functions, HTTP endpoints, or email/SMS notifications**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Triggering Lambda from EC2 Events</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>EC2 can trigger a Lambda function via SNS or SQS to perform processing asynchronously:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# EC2 publishes a message to SNS
+aws sns publish --topic-arn MyTopic --message "Run background job"
+
+# Lambda subscribed to the topic executes automatically
+    </pre>
+    <li>Lambda can perform tasks such as data transformation, notification, or updating databases without impacting EC2 performance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Event Flow</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>User uploads a file to EC2-hosted web service.</li>
+    <li>EC2 instance sends a message to an SQS queue: "Process File".</li>
+    <li>SQS triggers a Lambda function to process the file asynchronously.</li>
+    <li>Lambda publishes a result to an SNS topic. Other services (email, dashboard, or another EC2 service) subscribe to receive notifications.</li>
+  </ol>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **IAM roles** for EC2 and Lambda to access SQS/SNS securely without storing credentials.</li>
+    <li>Ensure **idempotent processing**: messages may be delivered more than once.</li>
+    <li>Monitor queues and Lambda executions via **CloudWatch Metrics** and **Alarms**.</li>
+    <li>Use **Dead-Letter Queues (DLQ)** for failed message processing.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-event-driven.png" alt="EC2 Event-Driven Architecture" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-change-ami" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Changing the AMI of a Running EC2 Instance</h2>
+
+  <p class="mb-4 text-gray-700">
+    Directly changing the AMI of a running EC2 instance is **not possible** because the AMI defines the instance’s root volume at launch. However, you can achieve the same result with **minimal downtime** using the following methods.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Create an AMI from the Existing Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to <strong>EC2 Console → Instances</strong>.</li>
+    <li>Select the instance and choose <strong>Actions → Image → Create Image</strong>.</li>
+    <li>This creates a snapshot of the instance’s volumes, generating a **custom AMI**.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Launch a New Instance from the Desired AMI</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use the new AMI (official or custom) to launch a fresh EC2 instance.</li>
+    <li>Optionally, configure the same **instance type, VPC, subnets, and security groups** as the original.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Migrate Data and Configuration</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Attach the original instance’s **EBS volumes** to the new instance if needed.</li>
+    <li>Copy configuration files, application data, and environment variables.</li>
+    <li>Use automation tools (Ansible, CloudFormation, or Terraform) for faster migration.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Switch to the New Instance</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Update **Elastic IP** or **DNS records** to point to the new instance.</li>
+    <li>Verify the application is running correctly before terminating the old instance.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Optional: Use EC2 Launch Templates for Future AMI Changes</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Store instance configuration in a **Launch Template**.</li>
+    <li>When a new AMI is available, **update the template** and launch new instances automatically.</li>
+    <li>Combine with **Auto Scaling Groups** for rolling updates with zero downtime.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-change-ami.png" alt="EC2 Change AMI Flow" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-automation" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Automating EC2 Launches Using CloudFormation or CDK</h2>
+
+  <p class="mb-4 text-gray-700">
+    Automating EC2 instance launches ensures consistent configurations, reduces human error, and supports infrastructure-as-code practices. AWS provides **CloudFormation** and **CDK (Cloud Development Kit)** for this purpose.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using CloudFormation</h3>
+  <p class="text-gray-700 mb-2">
+    CloudFormation allows you to define your EC2 resources in **YAML or JSON templates**.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Launch EC2 instance automatically
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0abcdef1234567890
+      KeyName: MyKeyPair
+      SecurityGroupIds:
+        - sg-0123456789abcdef0
+      SubnetId: subnet-0abc1234
+  </pre>
+  <p class="text-gray-700 mt-2">
+    Deploy using CLI: <code>aws cloudformation create-stack --stack-name MyStack --template-body file://ec2-template.yaml</code>
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Using AWS CDK</h3>
+  <p class="text-gray-700 mb-2">
+    CDK allows you to define infrastructure using **programming languages** like TypeScript, Python, Java, or C#.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+// TypeScript example
+import * as cdk from 'aws-cdk-lib';
+import { Instance, InstanceType, AmazonLinuxImage, AmazonLinuxGeneration } from 'aws-cdk-lib/aws-ec2';
+import { Stack, StackProps } from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+
+export class EC2Stack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    new Instance(this, 'MyEC2Instance', {
+      instanceType: new InstanceType('t2.micro'),
+      machineImage: new AmazonLinuxImage({ generation: AmazonLinuxGeneration.AMAZON_LINUX_2 }),
+      vpc: myVpc,
+      keyName: 'MyKeyPair'
+    });
+  }
+}
+  </pre>
+  <p class="text-gray-700 mt-2">
+    Deploy using CLI: <code>cdk deploy</code>
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **parameters** in CloudFormation for dynamic values like AMI ID, instance type, and key names.</li>
+    <li>Use **constructs in CDK** for reusable components.</li>
+    <li>Tag your EC2 resources for better management and cost tracking.</li>
+    <li>Integrate **Auto Scaling Groups** within your templates for scalable deployments.</li>
+    <li>Store templates in **version control** to track changes and enable reproducibility.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-automation.png" alt="EC2 Automation with CloudFormation and CDK" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-health-check" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Checking EC2 Instance Health Programmatically</h2>
+
+  <p class="mb-4 text-gray-700">
+    Monitoring the health of EC2 instances is critical to ensure uptime and performance. You can check **system status** and **instance status** using the AWS CLI or SDKs.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using AWS CLI</h3>
+  <p class="text-gray-700 mb-2">
+    The <code>describe-instance-status</code> command provides status checks for instances.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 describe-instance-status \
+  --instance-ids i-0123456789abcdef0 \
+  --include-all-instances
+  </pre>
+  <p class="text-gray-700 mt-2">
+    Example output includes:
+    <ul class="list-disc list-inside ml-6 mt-1 text-gray-700">
+      <li><strong>SystemStatus</strong>: Indicates AWS system-level health (hardware, networking).</li>
+      <li><strong>InstanceStatus</strong>: Indicates instance-level health (OS, boot process, connectivity).</li>
+      <li><strong>Events</strong>: Any scheduled maintenance or warnings.</li>
+    </ul>
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Using AWS SDK (Python Example)</h3>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+import boto3
+
+ec2 = boto3.client('ec2', region_name='us-east-1')
+response = ec2.describe_instance_status(
+    InstanceIds=['i-0123456789abcdef0'],
+    IncludeAllInstances=True
+)
+for status in response['InstanceStatuses']:
+    print("Instance ID:", status['InstanceId'])
+    print("System Status:", status['SystemStatus']['Status'])
+    print("Instance Status:", status['InstanceStatus']['Status'])
+    print("Events:", status.get('Events', 'None'))
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Monitoring Health in Real-Time</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **CloudWatch metrics** like <code>CPUUtilization</code>, <code>StatusCheckFailed</code>, and <code>NetworkIn/Out</code>.</li>
+    <li>Combine with **CloudWatch Alarms** to trigger notifications or automated recovery.</li>
+    <li>Automate health checks using **AWS Lambda** to restart or replace failing instances.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Check both **SystemStatus** and **InstanceStatus** for a complete picture.</li>
+    <li>Use **IncludeAllInstances=True** to include stopped instances for auditing.</li>
+    <li>Combine CLI/SDK checks with **CloudWatch dashboards** for monitoring multiple instances.</li>
+    <li>Set up **automated remediation** (Auto Scaling, Lambda) for failing instances.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-health-check.png" alt="EC2 Instance Health Check" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-vpc-connectivity" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Connecting EC2 Instances Across VPCs</h2>
+
+  <p class="mb-4 text-gray-700">
+    Sometimes, your architecture requires EC2 instances in different VPCs to communicate securely. AWS provides **VPC Peering** and **Transit Gateway** for this purpose.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. VPC Peering</h3>
+  <p class="text-gray-700 mb-2">
+    VPC Peering establishes a **direct network route** between two VPCs. Traffic uses private IPs and stays within the AWS network.
+  </p>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Supports **one-to-one VPC connectivity**.</li>
+    <li>Routing must be configured in route tables of both VPCs.</li>
+    <li>Security Groups and Network ACLs must allow traffic between instances.</li>
+  </ul>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Example: Create VPC Peering via CLI
+aws ec2 create-vpc-peering-connection \
+    --vpc-id vpc-aaa111 \
+    --peer-vpc-id vpc-bbb222 \
+    --region us-east-1
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Transit Gateway</h3>
+  <p class="text-gray-700 mb-2">
+    Transit Gateway allows **hub-and-spoke connectivity** between multiple VPCs and on-prem networks.
+  </p>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Scales to **hundreds of VPCs**.</li>
+    <li>Simplifies routing: Attach all VPCs to the Transit Gateway instead of managing multiple peering connections.</li>
+    <li>Supports routing policies and network segmentation.</li>
+  </ul>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Example: Attach VPC to Transit Gateway via CLI
+aws ec2 create-transit-gateway-vpc-attachment \
+    --transit-gateway-id tgw-0123456789abcdef0 \
+    --vpc-id vpc-aaa111 \
+    --subnet-ids subnet-aaa subnet-bbb
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Security and Routing Considerations</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Update **route tables** in each VPC to route traffic to the peer VPC or Transit Gateway.</li>
+    <li>Configure **Security Groups** to allow traffic on required ports (e.g., HTTP, SSH).</li>
+    <li>VPC Peering **does not support transitive routing**. Use Transit Gateway for multi-VPC or hybrid connectivity.</li>
+    <li>Monitor traffic flow using **VPC Flow Logs** for troubleshooting.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Example Scenario</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>VPC A hosts web EC2 instances (frontend).</li>
+    <li>VPC B hosts database EC2 instances (backend).</li>
+    <li>VPC Peering is created between VPC A and B.</li>
+    <li>Route tables are updated so frontend EC2s can reach backend EC2s using private IPs.</li>
+    <li>Security Groups are configured to allow port 3306 (MySQL) traffic from VPC A.</li>
+  </ol>
+
+  <div class="mt-4">
+    <img src="images/ec2-vpc-connectivity.png" alt="EC2 VPC Connectivity" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-private-endpoints" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Accessing S3 or DynamoDB via Private Endpoints from EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    By default, EC2 instances access AWS services over the public internet. To increase security and reduce exposure, you can use <strong>VPC Endpoints</strong> so traffic to S3 or DynamoDB stays within the AWS network.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. VPC Endpoint Types</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li><strong>Gateway Endpoint:</strong> Used for <code>S3</code> and <code>DynamoDB</code>. Routes traffic directly through the VPC routing table.</li>
+    <li><strong>Interface Endpoint:</strong> Uses <code>ENIs</code> with private IPs to connect to other AWS services securely.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Creating a Gateway Endpoint for S3</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Go to <strong>VPC Console → Endpoints → Create Endpoint</strong>.</li>
+    <li>Select <strong>Service Name</strong>: <code>com.amazonaws.us-east-1.s3</code>.</li>
+    <li>Select your <strong>VPC</strong> and <strong>route tables</strong> to associate.</li>
+    <li>Click <strong>Create Endpoint</strong>.</li>
+  </ul>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Example: Using AWS CLI to create S3 VPC Gateway Endpoint
+aws ec2 create-vpc-endpoint \
+  --vpc-id vpc-0123456789abcdef0 \
+  --service-name com.amazonaws.us-east-1.s3 \
+  --route-table-ids rtb-0123456789abcdef0
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Creating a DynamoDB VPC Endpoint</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Select <strong>Service Name</strong>: <code>com.amazonaws.us-east-1.dynamodb</code>.</li>
+    <li>Associate the endpoint with your **VPC and route tables**.</li>
+    <li>Now EC2 can access DynamoDB without public internet.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Security Considerations</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **VPC Endpoint Policies** to restrict access to specific S3 buckets or DynamoDB tables.</li>
+    <li>Update **Security Groups** if using Interface Endpoints.</li>
+    <li>Ensure **DNS resolution** is enabled in the VPC so endpoint DNS names resolve to private IPs.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Example Use Case</h3>
+  <ol class="list-decimal list-inside ml-4 space-y-2 text-gray-700">
+    <li>An EC2 instance in a private subnet uploads files to S3 using SDK:</li>
+    <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+import boto3
+
+s3 = boto3.client('s3', region_name='us-east-1')
+s3.upload_file('file.txt', 'my-secure-bucket', 'file.txt')
+    </pre>
+    <li>Traffic stays inside AWS network via the **S3 VPC Endpoint**; no public IP is required.</li>
+    <li>Similarly, EC2 can query DynamoDB tables through the DynamoDB gateway endpoint securely.</li>
+  </ol>
+
+  <div class="mt-4">
+    <img src="images/ec2-vpc-endpoints.png" alt="EC2 Private Endpoints for S3/DynamoDB" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-dynamic-sg" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Implementing Dynamic Security Group Rules Based on Environment</h2>
+
+  <p class="mb-4 text-gray-700">
+    In multi-environment architectures (dev, staging, production), Security Group (SG) rules often need to differ. Dynamically managing these rules ensures proper access control without manual updates.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using CloudFormation Parameters</h3>
+  <p class="text-gray-700 mb-2">
+    You can define environment-specific parameters in your template:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Default: dev
+
+Resources:
+  WebServerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Web Server SG
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !If
+            - IsProd
+            - 10.0.0.0/24
+            - 0.0.0.0/0
+  </pre>
+  <p class="text-gray-700 mt-2">
+    Conditional statements let you allow restricted SSH access in production but open access in development.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Using AWS CDK</h3>
+  <p class="text-gray-700 mb-2">
+    CDK allows programmatic control of SG rules:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+// TypeScript example
+const env = process.env.DEPLOY_ENV || 'dev';
+
+const sg = new SecurityGroup(this, 'WebSG', { vpc });
+
+if (env === 'prod') {
+  sg.addIngressRule(Peer.ipv4('10.0.0.0/24'), Port.tcp(22), 'Prod SSH access');
+} else {
+  sg.addIngressRule(Peer.anyIpv4(), Port.tcp(22), 'Dev SSH access');
+}
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Using Automation Scripts</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **AWS CLI scripts** to apply SG rules dynamically:
+      <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-0123456789abcdef0 \
+  --protocol tcp \
+  --port 22 \
+  --cidr 10.0.0.0/24
+      </pre>
+    </li>
+    <li>Integrate with **CI/CD pipelines** to update SG rules based on branch (dev, staging, main).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **least privilege**: only allow required ports and IP ranges per environment.</li>
+    <li>Keep **infrastructure-as-code** templates in version control to track changes.</li>
+    <li>Automate SG updates as part of deployment pipelines for consistency.</li>
+    <li>Monitor with **AWS Config** to detect unintended SG changes.</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-dynamic-sg.png" alt="Dynamic Security Group by Environment" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-dynamic-sg" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Implementing Dynamic Security Group Rules Based on Environment or Deployment Stage</h2>
+
+  <p class="mb-4 text-gray-700">
+    In modern cloud architectures, you often have multiple deployment environments such as <strong>development</strong>, <strong>staging</strong>, and <strong>production</strong>. Each environment may require different network access rules for your EC2 instances. Implementing dynamic Security Group (SG) rules allows you to automatically configure ingress and egress rules according to the deployment stage, minimizing manual changes and improving security compliance.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Using CloudFormation Parameters and Conditions</h3>
+  <p class="text-gray-700 mb-2">
+    CloudFormation templates can define <strong>parameters</strong> and <strong>conditions</strong> to apply different SG rules based on environment.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [dev, staging, prod]
+    Default: dev
+
+Conditions:
+  IsProd: !Equals [ !Ref Environment, prod ]
+
+Resources:
+  WebServerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Web Server SG
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !If
+            - IsProd
+            - 10.0.0.0/24       # Restricted SSH in production
+            - 0.0.0.0/0         # Open SSH in dev/staging
+  </pre>
+  <p class="text-gray-700 mt-2">
+    Here, SSH access is limited to a private subnet in production, but allowed globally in development.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Using AWS CDK (Programmatic Approach)</h3>
+  <p class="text-gray-700 mb-2">
+    CDK allows you to write code that dynamically adjusts SG rules according to environment variables or deployment stage.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+// TypeScript example
+const env = process.env.DEPLOY_ENV || 'dev';
+
+const sg = new SecurityGroup(this, 'WebSG', { vpc });
+
+if (env === 'prod') {
+  sg.addIngressRule(Peer.ipv4('10.0.0.0/24'), Port.tcp(22), 'Prod SSH access');
+} else {
+  sg.addIngressRule(Peer.anyIpv4(), Port.tcp(22), 'Dev/Staging SSH access');
+}
+  </pre>
+  <p class="text-gray-700 mt-2">
+    This approach integrates with CI/CD pipelines. For example, `DEPLOY_ENV=prod` ensures the deployed SG rules are production-safe.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Automating via CLI or Scripts</h3>
+  <p class="text-gray-700 mb-2">
+    You can also use AWS CLI or automation scripts to dynamically adjust SG rules during deployments.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Example: Authorize SSH ingress for production
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-0123456789abcdef0 \
+  --protocol tcp \
+  --port 22 \
+  --cidr 10.0.0.0/24
+
+# Example: Open SSH for dev environment
+aws ec2 authorize-security-group-ingress \
+  --group-id sg-0123456789abcdef0 \
+  --protocol tcp \
+  --port 22 \
+  --cidr 0.0.0.0/0
+  </pre>
+  <p class="text-gray-700 mt-2">
+    These scripts can be executed as part of CI/CD pipelines to enforce environment-specific access automatically.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Always follow the **least privilege principle**: allow only necessary ports and IP ranges for each environment.</li>
+    <li>Keep all SG rules **infrastructure-as-code templates** or scripts for version control and reproducibility.</li>
+    <li>Integrate SG updates into your **CI/CD pipeline** to ensure consistency across environments.</li>
+    <li>Use **AWS Config** or CloudWatch to monitor and alert for unauthorized SG changes.</li>
+    <li>Consider using **parameterized VPC endpoint access** for service-specific rules (e.g., allowing only private S3 access in production).</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-dynamic-sg.png" alt="Dynamic Security Group Rules" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-monitoring" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Monitoring CPU, Memory, and Disk I/O for EC2</h2>
+
+  <p class="mb-4 text-gray-700">
+    Efficient monitoring of EC2 instances is crucial to ensure performance, detect anomalies, and optimize costs. AWS provides multiple tools, such as <strong>CloudWatch Metrics</strong>, <strong>CloudWatch Agent</strong>, and third-party monitoring solutions.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. CPU Monitoring</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li><strong>CloudWatch Metric:</strong> <code>CPUUtilization</code> tracks percentage usage over time.</li>
+    <li>Set CloudWatch Alarms for thresholds (e.g., CPU > 80% for 5 minutes) to trigger notifications or scaling actions.</li>
+    <li>Example CloudWatch CLI command:</li>
+  </ul>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+aws cloudwatch put-metric-alarm \
+    --alarm-name HighCPUUtilization \
+    --metric-name CPUUtilization \
+    --namespace AWS/EC2 \
+    --statistic Average \
+    --period 300 \
+    --threshold 80 \
+    --comparison-operator GreaterThanThreshold \
+    --dimensions Name=InstanceId,Value=i-0123456789abcdef0 \
+    --evaluation-periods 2 \
+    --alarm-actions arn:aws:sns:us-east-1:123456789012:NotifyMe
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Memory Monitoring</h3>
+  <p class="text-gray-700 mb-2">
+    By default, EC2 does not send memory metrics to CloudWatch. Install the <strong>CloudWatch Agent</strong> to capture memory usage.
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+# Install CloudWatch Agent on Linux
+sudo yum install amazon-cloudwatch-agent -y
+
+# Create agent config for memory metrics
+cat <<EOF > /opt/aws/amazon-cloudwatch-agent/bin/config.json
+{
+  "metrics": {
+    "metrics_collected": {
+      "mem": {
+        "measurement": ["mem_used_percent"]
+      }
+    }
+  }
+}
+EOF
+
+# Start agent
+sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
+  -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Disk I/O Monitoring</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li><strong>CloudWatch Metrics:</strong> <code>DiskReadOps</code>, <code>DiskWriteOps</code>, <code>DiskReadBytes</code>, <code>DiskWriteBytes</code>.</li>
+    <li>Monitor high read/write latency or throughput bottlenecks.</li>
+    <li>Use CloudWatch Alarms or dashboards to visualize disk performance trends.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Best Practices</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Enable <strong>detailed monitoring</strong> in CloudWatch for 1-minute granularity on EC2.</li>
+    <li>Combine CPU, memory, and disk metrics in a <strong>single CloudWatch dashboard</strong> for easier analysis.</li>
+    <li>Automate alarms for **auto-scaling** or remediation when thresholds are exceeded.</li>
+    <li>Consider **custom metrics** for application-specific monitoring (e.g., JVM heap, DB connections).</li>
+  </ul>
+
+  <div class="mt-4">
+    <img src="images/ec2-monitoring.png" alt="EC2 Monitoring Dashboard" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+<section id="ec2-cloudwatch-logs" class="bg-white rounded-lg shadow p-6 mb-6">
+  <h2 class="text-2xl font-semibold mb-4">Capturing Application Logs from Multiple EC2 Instances Using CloudWatch Logs Agent</h2>
+
+  <p class="mb-4 text-gray-700">
+    To centralize and monitor application logs from multiple EC2 instances, AWS CloudWatch Logs provides a reliable way to collect, store, and visualize logs. Installing the CloudWatch Logs agent on EC2 instances allows you to push logs to CloudWatch, enabling troubleshooting, metrics extraction, and compliance auditing.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2">1. Install CloudWatch Logs Agent</h3>
+  <p class="text-gray-700 mb-2">
+    On Amazon Linux / RHEL / CentOS:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo yum install -y awslogs
+sudo systemctl enable awslogsd
+sudo systemctl start awslogsd
+  </pre>
+  <p class="text-gray-700 mt-2">
+    On Ubuntu / Debian:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo apt-get update
+sudo apt-get install -y awslogs
+sudo systemctl enable awslogs
+sudo systemctl start awslogs
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">2. Configure the Agent</h3>
+  <p class="text-gray-700 mb-2">
+    Edit the configuration file <code>/etc/awslogs/awslogs.conf</code> or create a custom config for your application logs:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+[general]
+state_file = /var/lib/awslogs/agent-state
+
+[app-log]
+file = /var/log/myapp/app.log
+log_group_name = myapp-logs
+log_stream_name = {instance_id}
+datetime_format = %Y-%m-%d %H:%M:%S
+  </pre>
+  <p class="text-gray-700 mt-2">
+    - <code>file</code>: Path to the log file on EC2.  
+    - <code>log_group_name</code>: CloudWatch Logs group to store logs.  
+    - <code>log_stream_name</code>: Can include `{instance_id}` to differentiate logs from multiple EC2 instances.  
+    - <code>datetime_format</code>: Optional, ensures timestamps are parsed correctly.
+  </p>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">3. Configure AWS Credentials</h3>
+  <p class="text-gray-700 mb-2">
+    The agent requires permission to push logs. Use either:
+  </p>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>IAM Role attached to EC2 with the policy <code>CloudWatchLogsFullAccess</code>.</li>
+    <li>Or AWS credentials in <code>/etc/awslogs/awscli.conf</code> (less secure).</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">4. Start and Verify Agent</h3>
+  <p class="text-gray-700 mb-2">
+    Start the agent and verify logs are being pushed:
+  </p>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+sudo systemctl start awslogsd
+sudo systemctl status awslogsd
+
+# View logs in CloudWatch Console → Logs → myapp-logs
+  </pre>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">5. Automating for Multiple Instances</h3>
+  <ul class="list-disc list-inside ml-4 space-y-2 text-gray-700">
+    <li>Use **Amazon Machine Image (AMI)** preconfigured with the CloudWatch Logs agent and configuration.</li>
+    <li>Use **user-data scripts** during instance launch to install and start the agent automatically.</li>
+    <li>Attach the same **IAM Role** to all EC2 instances so they can push logs to the same log group.</li>
+    <li>Use `{instance_id}` in log stream names to separate logs from each EC2 instance automatically.</li>
+  </ul>
+
+  <h3 class="text-xl font-semibold mb-2 mt-4">6. Example User-Data Script</h3>
+  <pre class="bg-gray-100 p-2 rounded text-sm overflow-x-auto">
+#!/bin/bash
+yum update -y
+yum install -y awslogs
+cat <<EOF > /etc/awslogs/awslogs.conf
+[general]
+state_file = /var/lib/awslogs/agent-state
+
+[app-log]
+file = /var/log/myapp/app.log
+log_group_name = myapp-logs
+log_stream_name = {instance_id}
+datetime_format = %Y-%m-%d %H:%M:%S
+EOF
+
+systemctl enable awslogsd
+systemctl start awslogsd
+  </pre>
+
+  <div class="mt-4">
+    <img src="images/ec2-cloudwatch-logs.png" alt="CloudWatch Logs Agent Setup" class="w-full max-w-xl mx-auto rounded shadow">
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <section id="ec2-storage-difference" class="bg-white rounded-lg shadow p-6 mb-6">
   <h2 class="text-2xl font-semibold mb-4">EC2 Storage: Instance Store vs EBS</h2>
 
