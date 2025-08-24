@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AWS Tutorial & Interview Guide</title>
+  <meta name="description" content="Learn AWS step by step: setup EC2, S3, Lambda, RDS, and review interview questions.">
+  <meta name="keywords" content="AWS, EC2, S3, Lambda, RDS, AWS tutorial, AWS interview questions, cloud computing">
+  <meta name="author" content="Your Name">
+  <link rel="icon" href="favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800">
+
+  <!-- Header -->
+<header class="bg-indigo-600 text-white fixed top-0 w-full z-50 shadow">
+  <div class="container mx-auto flex justify-between items-center p-4">
+    <!-- Logo / Title -->
+    <h1 class="text-2xl font-bold">My Tutorials</h1>
+
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex md:space-x-6 items-center">
+      <a href="../index.html" class="hover:underline whitespace-nowrap">Home</a>
+      <a href="../aws.html" class="hover:underline whitespace-nowrap">AWS</a>
+    </nav>
+
+    <!-- Mobile Hamburger -->
+    <div class="md:hidden">
+      <button id="menu-btn" class="focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <nav id="menu" class="hidden md:hidden bg-indigo-500">
+    <div class="flex flex-col px-4 py-2 space-y-2">
+      <a href="../index.html" class="hover:underline">Home</a>
+      <a href="../aws.html" class="hover:underline">AWS</a>
+    </div>
+  </nav>
+
+  <!-- Script for mobile toggle -->
+  <script>
+    const btn = document.getElementById('menu-btn');
+    const menu = document.getElementById('menu');
+
+    btn.addEventListener('click', () => {
+      menu.classList.toggle('hidden');
+    });
+  </script>
+</header>
+
+  <!-- Main Content -->
+  <main class="container mx-auto mt-24 p-4 space-y-10">
+
+
+
+    <section id="aws-programmatic-interaction" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How do you interact with AWS programmatically? (CLI, SDKs, APIs)
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS provides multiple ways to interact with its services programmatically, enabling automation, 
+      scripting, and integration into applications:
+    </p>
+
+    <!-- Methods -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">1. AWS CLI (Command Line Interface)</h3>
+      <p class="text-gray-700 mb-2">
+        The AWS CLI allows you to manage AWS services from your terminal or scripts using commands.
+      </p>
+      <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
+        <li>Supports almost all AWS services.</li>
+        <li>Ideal for automation, CI/CD pipelines, and one-off tasks.</li>
+        <li>Example: <code>aws s3 ls s3://my-bucket</code></li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code># List all objects in an S3 bucket
+aws s3api list-objects-v2 --bucket my-bucket</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">2. AWS SDKs (Software Development Kits)</h3>
+      <p class="text-gray-700 mb-2">
+        SDKs allow your applications to interact with AWS services programmatically using native programming languages.
+      </p>
+      <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
+        <li>Supported languages include Python (Boto3), Java, JavaScript/Node.js, C#, Go, Ruby, PHP, etc.</li>
+        <li>Handles authentication, retries, and serialization for you.</li>
+        <li>Example: Upload a file to S3 using Python:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+s3 = boto3.client('s3')
+s3.upload_file('localfile.txt', 'my-bucket', 'remote-file.txt')</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">3. AWS REST APIs</h3>
+      <p class="text-gray-700 mb-2">
+        AWS services expose RESTful HTTP APIs, allowing direct HTTP requests with proper signing (AWS Signature Version 4).
+      </p>
+      <ul class="list-disc list-inside text-gray-700 space-y-1 mb-4">
+        <li>Useful when SDKs are not available.</li>
+        <li>Requires signing requests with AWS credentials.</li>
+        <li>Example: Direct S3 GET request with Authorization header.</li>
+      </ul>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use IAM roles or temporary credentials for programmatic access instead of root account keys.</li>
+        <li>Prefer SDKs over direct API calls for easier error handling and retries.</li>
+        <li>Use CLI for scripting, automation, and bulk operations.</li>
+        <li>Always secure your credentials using AWS Secrets Manager or environment variables.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+    <section id="aws-cli" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      AWS CLI (Command Line Interface)
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      The <strong>AWS Command Line Interface (CLI)</strong> is a unified tool to manage 
+      AWS services directly from your terminal. It allows developers, system administrators, 
+      and DevOps engineers to automate tasks, script operations, and perform bulk actions 
+      efficiently.
+    </p>
+
+    <!-- Key Features -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Key Features</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Supports almost all AWS services and their API operations.</li>
+        <li>Enables scripting, automation, and integration with CI/CD pipelines.</li>
+        <li>Handles authentication via AWS credentials and IAM roles.</li>
+        <li>Supports paginated results, JSON/YAML/TSV output formats.</li>
+        <li>Can perform bulk operations, e.g., copying, syncing, and deleting files in S3.</li>
+        <li>Integrates with AWS profiles for managing multiple accounts.</li>
+      </ul>
+    </div>
+
+    <!-- Installation -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Installation</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li><strong>Windows:</strong> Use the MSI installer from AWS official site.</li>
+        <li><strong>macOS:</strong> Use Homebrew: <code>brew install awscli</code></li>
+        <li><strong>Linux:</strong> Use package manager or pip: <code>pip install awscli --upgrade --user</code></li>
+      </ul>
+    </div>
+
+    <!-- Configuration -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Configuration</h3>
+      <p class="text-gray-700 mb-2">
+        Configure AWS CLI with your credentials and default region:
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws configure
+# Prompts:
+# AWS Access Key ID [None]: &lt;your-access-key-id&gt;
+# AWS Secret Access Key [None]: &lt;your-secret-access-key&gt;
+# Default region name [None]: us-east-1
+# Default output format [None]: json</code></pre>
+      <p class="text-gray-700">
+        You can also manage multiple accounts using <code>aws configure --profile &lt;profile-name&gt;</code>.
+      </p>
+    </div>
+
+    <!-- Common Usage -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Common Commands</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li><strong>S3 Operations:</strong> Upload/download files, sync directories, manage buckets.</li>
+        <li><strong>EC2:</strong> Launch, stop, or describe instances.</li>
+        <li><strong>IAM:</strong> Manage users, roles, and policies.</li>
+        <li><strong>CloudFormation:</strong> Deploy, update, and delete stacks.</li>
+        <li><strong>CloudWatch:</strong> View logs and metrics.</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code># Example: List all S3 buckets
+aws s3 ls
+
+# Example: Copy file to S3
+aws s3 cp localfile.txt s3://my-bucket/
+
+# Example: Sync local folder with S3 bucket
+aws s3 sync ./local-folder s3://my-bucket/</code></pre>
+    </div>
+
+    <!-- Advanced Features -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Advanced Features</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Use <strong>pagination and filters</strong> to handle large datasets.</li>
+        <li>Generate <strong>pre-signed URLs</strong> for secure temporary access.</li>
+        <li>Integrate with <strong>scripts, cron jobs, and CI/CD pipelines</strong> for automation.</li>
+        <li>Enable <strong>debugging</strong> with <code>--debug</code> flag to inspect requests and responses.</li>
+      </ul>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use IAM roles and temporary credentials instead of hardcoding access keys.</li>
+        <li>Always use <strong>profiles</strong> to manage multiple AWS accounts safely.</li>
+        <li>Combine CLI with <strong>scripts and automation tools</strong> for repeatable workflows.</li>
+        <li>Enable <strong>logging and monitoring</strong> for audit trails.</li>
+        <li>Test commands with <code>--dry-run</code> where possible to prevent accidental changes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+    <section id="aws-cli-installation" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How do you install AWS CLI on your local machine?
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      The AWS Command Line Interface (CLI) allows you to interact with AWS services directly from your terminal or command prompt. Installation differs based on your operating system.
+    </p>
+
+    <!-- Installation Methods -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Windows</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
+        <li>Download the MSI installer from the <a href="https://aws.amazon.com/cli/" target="_blank" class="text-blue-600 underline">AWS CLI official site</a>.</li>
+        <li>Run the installer and follow the prompts.</li>
+        <li>Verify installation:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws --version</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">2. macOS</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
+        <li>Install via Homebrew:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>brew install awscli</code></pre>
+      <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
+        <li>Verify installation:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws --version</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">3. Linux</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
+        <li>Install using pip:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>pip install --upgrade --user awscli</code></pre>
+      <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
+        <li>Or use your Linux distribution package manager (e.g., apt, yum).</li>
+        <li>Verify installation:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws --version</code></pre>
+    </div>
+
+    <!-- Post-install Configuration -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Post-install Configuration</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Configure AWS CLI with your credentials:</li>
+      </ul>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws configure
+# Enter your AWS Access Key ID
+# Enter your AWS Secret Access Key
+# Default region (e.g., us-east-1)
+# Default output format (json, table, text)</code></pre>
+      <ul class="list-disc list-inside text-gray-700 space-y-1 mt-2">
+        <li>Use multiple profiles for managing multiple AWS accounts: <code>aws configure --profile &lt;profile-name&gt;</code></li>
+        <li>Verify configuration by listing S3 buckets: <code>aws s3 ls</code></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-cli-configuration" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How do you configure AWS CLI with credentials and default region?
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      After installing the AWS CLI, you need to configure it with your AWS credentials and default region to interact with AWS services.
+    </p>
+
+    <!-- Configuration Steps -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Basic Configuration</h3>
+      <p class="text-gray-700 mb-2">Run the following command:</p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws configure</code></pre>
+      <p class="text-gray-700 mb-2">You will be prompted to enter:</p>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li><strong>AWS Access Key ID:</strong> Your IAM access key ID.</li>
+        <li><strong>AWS Secret Access Key:</strong> Your IAM secret key.</li>
+        <li><strong>Default region name:</strong> e.g., <code>us-east-1</code>, <code>eu-west-1</code>.</li>
+        <li><strong>Default output format:</strong> <code>json</code>, <code>table</code>, or <code>text</code>.</li>
+      </ul>
+    </div>
+
+    <!-- Example -->
+    <div class="p-6 bg-gray-100 rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Example</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>$ aws configure
+AWS Access Key ID [None]: AKIAxxxxxxxxxxxx
+AWS Secret Access Key [None]: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+Default region name [None]: us-east-1
+Default output format [None]: json</code></pre>
+    </div>
+
+    <!-- Profiles for Multiple Accounts -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">2. Using Profiles for Multiple Accounts</h3>
+      <p class="text-gray-700 mb-2">
+        You can maintain multiple configurations using named profiles:
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws configure --profile dev
+aws configure --profile prod</code></pre>
+      <p class="text-gray-700">
+        To use a profile for a command:
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws s3 ls --profile dev</code></pre>
+    </div>
+
+    <!-- Verification -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">3. Verify Configuration</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Check configured credentials and region:</li>
+        <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws configure list</code></pre>
+        <li>Test access to a service (e.g., list S3 buckets):</li>
+        <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws s3 ls</code></pre>
+      </ul>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use IAM roles or temporary credentials instead of root account keys.</li>
+        <li>Use profiles for managing multiple AWS accounts safely.</li>
+        <li>Store credentials securely (avoid committing to code repositories).</li>
+        <li>Regularly rotate access keys and secret keys.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-cli-v1-v2" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      Difference between AWS CLI v1 and v2
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS CLI has two major versions: <strong>v1</strong> and <strong>v2</strong>. 
+      While both provide command-line access to AWS services, v2 includes several improvements and new features.
+    </p>
+
+    <!-- Comparison Table -->
+    <div class="overflow-x-auto mb-6">
+      <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">Feature</th>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">AWS CLI v1</th>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">AWS CLI v2</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700">
+          <tr class="border-b">
+            <td class="px-6 py-3">Installation</td>
+            <td class="px-6 py-3">Separate dependencies; requires Python to be installed.</td>
+            <td class="px-6 py-3">Bundled installer with embedded Python; easier to install on multiple OS.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">SSO Support</td>
+            <td class="px-6 py-3">Not supported natively.</td>
+            <td class="px-6 py-3">Supports AWS Single Sign-On (SSO) natively.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">New Features</td>
+            <td class="px-6 py-3">Older features, fewer enhancements.</td>
+            <td class="px-6 py-3">Includes new features like improved prompts, auto-paging, and default credential process.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Command Output</td>
+            <td class="px-6 py-3">Basic JSON, table, text.</td>
+            <td class="px-6 py-3">Same formats plus improved handling for paginated output and auto-paging.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Compatibility</td>
+            <td class="px-6 py-3">Compatible with older scripts, Python 2.x and 3.x.</td>
+            <td class="px-6 py-3">Backward compatible with v1 commands; uses embedded Python 3.7+.</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-3">Security</td>
+            <td class="px-6 py-3">Depends on system Python SSL libraries.</td>
+            <td class="px-6 py-3">Improved SSL/TLS handling with embedded libraries.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Summary</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li><strong>v2</strong> is the recommended version for new installations.</li>
+        <li>v2 simplifies installation with embedded Python and improves security.</li>
+        <li>v2 supports AWS SSO natively and provides better handling of pagination and credentials.</li>
+        <li>Scripts written for v1 usually work with v2, making migration straightforward.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+<section id="aws-cli-commands" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      Common AWS CLI Commands
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS CLI provides commands for almost all AWS services. Here are some commonly used commands for frequently accessed services:
+    </p>
+
+    <!-- S3 Commands -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">S3 Commands</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>List all buckets: <code>aws s3 ls</code></li>
+        <li>List objects in a bucket: <code>aws s3 ls s3://my-bucket</code></li>
+        <li>Upload a file: <code>aws s3 cp localfile.txt s3://my-bucket/</code></li>
+        <li>Sync folder: <code>aws s3 sync ./local-folder s3://my-bucket/</code></li>
+        <li>Download a file: <code>aws s3 cp s3://my-bucket/file.txt ./</code></li>
+        <li>Delete a file: <code>aws s3 rm s3://my-bucket/file.txt</code></li>
+      </ul>
+    </div>
+
+    <!-- EC2 Commands -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">EC2 Commands</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Describe instances: <code>aws ec2 describe-instances</code></li>
+        <li>Start an instance: <code>aws ec2 start-instances --instance-ids i-0123456789abcdef0</code></li>
+        <li>Stop an instance: <code>aws ec2 stop-instances --instance-ids i-0123456789abcdef0</code></li>
+        <li>Terminate an instance: <code>aws ec2 terminate-instances --instance-ids i-0123456789abcdef0</code></li>
+      </ul>
+    </div>
+
+    <!-- IAM Commands -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">IAM Commands</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>List users: <code>aws iam list-users</code></li>
+        <li>Create user: <code>aws iam create-user --user-name my-user</code></li>
+        <li>Attach policy to user: <code>aws iam attach-user-policy --user-name my-user --policy-arn arn:aws:iam::aws:policy/AdministratorAccess</code></li>
+        <li>List roles: <code>aws iam list-roles</code></li>
+      </ul>
+    </div>
+
+    <!-- CloudFormation Commands -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">CloudFormation Commands</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Create stack: <code>aws cloudformation create-stack --stack-name my-stack --template-body file://template.yaml</code></li>
+        <li>Update stack: <code>aws cloudformation update-stack --stack-name my-stack --template-body file://template.yaml</code></li>
+        <li>Delete stack: <code>aws cloudformation delete-stack --stack-name my-stack</code></li>
+        <li>List stacks: <code>aws cloudformation list-stacks</code></li>
+      </ul>
+    </div>
+
+    <!-- General Commands -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">General Commands</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Check CLI version: <code>aws --version</code></li>
+        <li>List configured profiles: <code>aws configure list-profiles</code></li>
+        <li>View current configuration: <code>aws configure list</code></li>
+        <li>Use a profile for a command: <code>aws s3 ls --profile dev</code></li>
+      </ul>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use profiles for multiple accounts to avoid confusion.</li>
+        <li>Combine CLI commands with scripts for automation and repeatable workflows.</li>
+        <li>Use <code>--dry-run</code> where possible to prevent accidental destructive actions.</li>
+        <li>Secure credentials using IAM roles, temporary tokens, or AWS Secrets Manager.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section id="aws-sdk" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      AWS SDK (Software Development Kit)
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      The <strong>AWS SDK</strong> is a set of language-specific libraries that allow developers 
+      to interact with AWS services programmatically from applications. SDKs simplify the process 
+      of integrating AWS services by handling authentication, request signing, retries, and data serialization.
+    </p>
+
+    <!-- Supported Languages -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Supported Languages</h3>
+      <p class="text-gray-700 mb-2">AWS SDKs are available for multiple programming languages:</p>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li><strong>Python:</strong> Boto3</li>
+        <li><strong>Java:</strong> AWS SDK for Java</li>
+        <li><strong>JavaScript/Node.js:</strong> AWS SDK for JavaScript</li>
+        <li><strong>C#/.NET:</strong> AWS SDK for .NET</li>
+        <li><strong>Go:</strong> AWS SDK for Go</li>
+        <li><strong>Ruby:</strong> AWS SDK for Ruby</li>
+        <li><strong>PHP:</strong> AWS SDK for PHP</li>
+      </ul>
+    </div>
+
+    <!-- Key Features -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Key Features</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2">
+        <li>Provides a native interface to AWS services in your chosen programming language.</li>
+        <li>Handles authentication using IAM roles, access keys, or temporary credentials.</li>
+        <li>Automatically signs requests using AWS Signature Version 4.</li>
+        <li>Supports retries and exponential backoff for failed requests.</li>
+        <li>Serializes and deserializes JSON, XML, and other data formats.</li>
+        <li>Integrates with AWS services such as S3, EC2, DynamoDB, Lambda, and more.</li>
+      </ul>
+    </div>
+
+    <!-- Installation -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Installation Examples</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-2 mb-4">
+        <li><strong>Python (Boto3):</strong> <code>pip install boto3</code></li>
+        <li><strong>Node.js:</strong> <code>npm install aws-sdk</code></li>
+        <li><strong>Java (Maven):</strong> Add dependency in <code>pom.xml</code>:
+          <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-2 overflow-x-auto"><code>&lt;dependency&gt;
+  &lt;groupId&gt;software.amazon.awssdk&lt;/groupId&gt;
+  &lt;artifactId&gt;s3&lt;/artifactId&gt;
+  &lt;version&gt;2.x.x&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Example Usage -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Example: Uploading a File to S3</h3>
+
+      <p class="text-gray-700 mb-2"><strong>Python (Boto3):</strong></p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+s3 = boto3.client('s3')
+s3.upload_file('localfile.txt', 'my-bucket', 'remote-file.txt')</code></pre>
+
+      <p class="text-gray-700 mb-2"><strong>Node.js:</strong></p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const fs = require('fs');
+
+const s3 = new AWS.S3();
+const fileStream = fs.createReadStream('localfile.txt');
+
+s3.upload({
+  Bucket: 'my-bucket',
+  Key: 'remote-file.txt',
+  Body: fileStream
+}, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Upload successful:', data.Location);
+});</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use IAM roles with least privilege for applications running on EC2, Lambda, or ECS.</li>
+        <li>Use environment variables or configuration files to store credentials securely.</li>
+        <li>Handle exceptions and implement retries with exponential backoff for network errors.</li>
+        <li>Use high-level abstractions provided by SDKs (like S3 resource objects in Boto3) for simpler code.</li>
+        <li>Keep SDKs up to date to leverage new AWS service features and security improvements.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-languages" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      Programming Languages with Official AWS SDKs
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS provides official SDKs for multiple programming languages, allowing developers to interact with AWS services in a native and idiomatic way.
+    </p>
+
+    <!-- SDK Table -->
+    <div class="overflow-x-auto mb-6">
+      <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">Programming Language</th>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">Official SDK</th>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">Maturity / Status</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700">
+          <tr class="border-b">
+            <td class="px-6 py-3">Java</td>
+            <td class="px-6 py-3">AWS SDK for Java v2</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Python</td>
+            <td class="px-6 py-3">Boto3</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">JavaScript / TypeScript</td>
+            <td class="px-6 py-3">AWS SDK for JavaScript</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">C# / .NET</td>
+            <td class="px-6 py-3">AWS SDK for .NET</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Go</td>
+            <td class="px-6 py-3">AWS SDK for Go v2</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Ruby</td>
+            <td class="px-6 py-3">AWS SDK for Ruby</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">PHP</td>
+            <td class="px-6 py-3">AWS SDK for PHP</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">C++</td>
+            <td class="px-6 py-3">AWS SDK for C++</td>
+            <td class="px-6 py-3">GA</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Kotlin</td>
+            <td class="px-6 py-3">AWS SDK for Kotlin</td>
+            <td class="px-6 py-3">Preview</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Rust</td>
+            <td class="px-6 py-3">AWS SDK for Rust</td>
+            <td class="px-6 py-3">Developer Preview</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-3">Swift</td>
+            <td class="px-6 py-3">AWS SDK for Swift</td>
+            <td class="px-6 py-3">Developer Preview</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Notes -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Notes</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>All SDKs support authentication, request signing, retries, and native service objects.</li>
+        <li>Mobile SDKs are also available for <strong>Android</strong> and <strong>iOS</strong>.</li>
+        <li>IoT/embedded SDKs are provided for resource-constrained devices.</li>
+        <li>GA = Generally Available; Preview = limited release; Developer Preview = early access.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-authentication" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How AWS SDKs Handle Authentication
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs provide secure, programmatic access to AWS services by handling authentication automatically. They support multiple authentication methods and integrate with IAM policies to control access.
+    </p>
+
+    <!-- Authentication Methods -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Access Keys</h3>
+      <p class="text-gray-700 mb-2">
+        The most common method uses AWS Access Key ID and Secret Access Key. SDKs automatically sign requests using these credentials.
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code># Example in Python (Boto3)
+import boto3
+
+session = boto3.Session(
+    aws_access_key_id='YOUR_ACCESS_KEY',
+    aws_secret_access_key='YOUR_SECRET_KEY',
+    region_name='us-east-1'
+)
+s3 = session.client('s3')</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">2. IAM Roles (for EC2, Lambda, ECS)</h3>
+      <p class="text-gray-700 mb-2">
+        SDKs automatically retrieve temporary credentials from the instance or container metadata when using IAM roles. No keys are stored in code.
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code># Example in Python (Boto3)
+import boto3
+s3 = boto3.client('s3')  # Uses IAM role credentials automatically</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">3. Environment Variables</h3>
+      <p class="text-gray-700 mb-2">
+        SDKs can read <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> from environment variables for non-production scripts or local development.
+      </p>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">4. Shared Credentials File</h3>
+      <p class="text-gray-700 mb-2">
+        Credentials can be stored in <code>~/.aws/credentials</code> and referenced by SDKs automatically or via named profiles.
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>[default]
+aws_access_key_id = YOUR_ACCESS_KEY
+aws_secret_access_key = YOUR_SECRET_KEY
+
+[dev]
+aws_access_key_id = DEV_KEY
+aws_secret_access_key = DEV_SECRET</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">5. AWS Single Sign-On (SSO)</h3>
+      <p class="text-gray-700 mb-2">
+        SDKs support AWS SSO to authenticate users via corporate identity providers without using long-lived access keys.
+      </p>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Prefer IAM roles over static access keys for applications running on AWS resources.</li>
+        <li>Use environment variables or shared credentials file for local development.</li>
+        <li>Rotate credentials regularly if using long-lived keys.</li>
+        <li>Do not hardcode credentials in source code.</li>
+        <li>Enable MFA for sensitive operations when possible.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section id="aws-sdk-credentials" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Configure AWS SDK Credentials in Your Application
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      To use AWS SDKs in your application, you must provide credentials so the SDK can authenticate requests to AWS services. There are multiple ways to configure credentials securely.
+    </p>
+
+    <!-- Methods -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">1. Using Environment Variables</h3>
+      <p class="text-gray-700 mb-2">
+        Set environment variables <code>AWS_ACCESS_KEY_ID</code> and <code>AWS_SECRET_ACCESS_KEY</code> before running your application.
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code># Linux / macOS
+export AWS_ACCESS_KEY_ID=YOUR_ACCESS_KEY
+export AWS_SECRET_ACCESS_KEY=YOUR_SECRET_KEY
+export AWS_DEFAULT_REGION=us-east-1
+
+# Windows PowerShell
+setx AWS_ACCESS_KEY_ID "YOUR_ACCESS_KEY"
+setx AWS_SECRET_ACCESS_KEY "YOUR_SECRET_KEY"
+setx AWS_DEFAULT_REGION "us-east-1"</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">2. Using Shared Credentials File (~/.aws/credentials)</h3>
+      <p class="text-gray-700 mb-2">
+        Create a credentials file with multiple profiles and reference them in your application.
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>[default]
+aws_access_key_id = YOUR_ACCESS_KEY
+aws_secret_access_key = YOUR_SECRET_KEY
+
+[dev]
+aws_access_key_id = DEV_ACCESS_KEY
+aws_secret_access_key = DEV_SECRET_KEY</code></pre>
+      <p class="text-gray-700">
+        Then specify the profile in your SDK code or configuration:
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+session = boto3.Session(profile_name='dev')
+s3 = session.client('s3')</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">3. Using IAM Roles (EC2, Lambda, ECS)</h3>
+      <p class="text-gray-700 mb-2">
+        Attach an IAM role with the necessary permissions to your AWS resource. The SDK automatically retrieves temporary credentials from the metadata service.
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+s3 = boto3.client('s3')  # Uses IAM role credentials automatically</code></pre>
+    </div>
+
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">4. Using AWS SSO</h3>
+      <p class="text-gray-700 mb-2">
+        For organizations using AWS Single Sign-On, you can configure SDKs to authenticate via SSO. Run:
+      </p>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>aws configure sso</code></pre>
+      <p class="text-gray-700">
+        Then reference the SSO profile in your SDK code.
+      </p>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Avoid hardcoding credentials in your application.</li>
+        <li>Use IAM roles for AWS resources whenever possible.</li>
+        <li>Use environment variables or shared credentials for local development.</li>
+        <li>Rotate credentials regularly.</li>
+        <li>Use AWS SSO for centralized identity management in large organizations.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-access-keys-vs-roles" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      Difference Between Using Access Keys and IAM Roles with AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs can authenticate using either long-lived <strong>Access Keys</strong> or temporary credentials provided by <strong>IAM Roles</strong>. Choosing between them affects security, convenience, and automation.
+    </p>
+
+    <!-- Comparison Table -->
+    <div class="overflow-x-auto mb-6">
+      <table class="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">Aspect</th>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">Access Keys</th>
+            <th class="px-6 py-3 text-left text-gray-900 font-semibold border-b">IAM Roles</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700">
+          <tr class="border-b">
+            <td class="px-6 py-3">Credentials Type</td>
+            <td class="px-6 py-3">Long-lived AWS Access Key ID and Secret Access Key.</td>
+            <td class="px-6 py-3">Temporary credentials automatically issued by AWS (via STS).</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Security</td>
+            <td class="px-6 py-3">Higher risk if keys are exposed or checked into source code.</td>
+            <td class="px-6 py-3">Safer; no keys are stored in code. Automatically rotated.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Use Case</td>
+            <td class="px-6 py-3">Local development, scripts, or CI/CD pipelines where roles are not available.</td>
+            <td class="px-6 py-3">AWS resources like EC2, Lambda, ECS, and other services running inside AWS.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Credential Rotation</td>
+            <td class="px-6 py-3">Manual rotation required.</td>
+            <td class="px-6 py-3">Automatic rotation by AWS; SDK refreshes temporary credentials seamlessly.</td>
+          </tr>
+          <tr class="border-b">
+            <td class="px-6 py-3">Setup Complexity</td>
+            <td class="px-6 py-3">Simple to configure via environment variables or shared credentials file.</td>
+            <td class="px-6 py-3">Requires attaching IAM roles to AWS resources or assuming roles via STS.</td>
+          </tr>
+          <tr>
+            <td class="px-6 py-3">Best Practice</td>
+            <td class="px-6 py-3">Avoid embedding in code; use only when necessary.</td>
+            <td class="px-6 py-3">Preferred method for AWS-hosted applications for enhanced security and automation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Summary</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Access Keys are static and suitable for local development or external scripts.</li>
+        <li>IAM Roles provide temporary credentials automatically and are recommended for AWS-hosted resources.</li>
+        <li>Using IAM Roles reduces risk of key leakage and simplifies credential management.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-list-buckets" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to List All Buckets Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs provide APIs to programmatically list all S3 buckets in your account. Below are examples in different programming languages.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+# Create S3 client
+s3 = boto3.client('s3')
+
+# List buckets
+response = s3.list_buckets()
+for bucket in response['Buckets']:
+    print(bucket['Name'])</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+s3.listBuckets((err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else {
+    data.Buckets.forEach(bucket =&gt; console.log(bucket.Name));
+  }
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ListBucketsResponse;
+
+S3Client s3 = S3Client.create();
+ListBucketsResponse response = s3.listBuckets();
+
+response.buckets().forEach(b -&gt; System.out.println(b.name()));</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Handle exceptions or errors for network issues or insufficient permissions.</li>
+        <li>Use IAM policies with least privilege (list-only access if you don’t need write permissions).</li>
+        <li>For applications with multiple regions or accounts, consider caching bucket lists for performance.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-create-bucket" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Create a New S3 Bucket Programmatically
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can create S3 buckets using AWS SDKs in different programming languages. Buckets must have a unique name globally and can specify region, access policies, and other settings.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+s3 = boto3.client('s3', region_name='us-east-1')
+
+# Create a new bucket
+s3.create_bucket(
+    Bucket='my-unique-bucket-name',
+    CreateBucketConfiguration={'LocationConstraint': 'us-east-1'}
+)
+print("Bucket created successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const s3 = new AWS.S3({ region: 'us-east-1' });
+
+s3.createBucket({ Bucket: 'my-unique-bucket-name' }, (err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else console.log('Bucket created successfully', data.Location);
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+
+S3Client s3 = S3Client.create();
+
+CreateBucketRequest request = CreateBucketRequest.builder()
+    .bucket("my-unique-bucket-name")
+    .build();
+
+s3.createBucket(request);
+System.out.println("Bucket created successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Bucket names must be globally unique across all AWS accounts.</li>
+        <li>Specify the region explicitly to reduce latency and data transfer costs.</li>
+        <li>Use IAM roles for applications running in AWS to avoid hardcoding credentials.</li>
+        <li>Optionally configure bucket policies, versioning, and encryption at creation time.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-upload-file" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Upload a File to an S3 Bucket Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs provide APIs to upload files to S3 programmatically. You can upload small or large files using simple or multipart upload methods.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+s3 = boto3.client('s3')
+bucket_name = 'my-bucket'
+file_path = 'localfile.txt'
+key_name = 'uploaded-file.txt'
+
+s3.upload_file(file_path, bucket_name, key_name)
+print("File uploaded successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const fs = require('fs');
+
+const s3 = new AWS.S3();
+const fileStream = fs.createReadStream('localfile.txt');
+
+s3.upload({
+  Bucket: 'my-bucket',
+  Key: 'uploaded-file.txt',
+  Body: fileStream
+}, (err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else console.log('File uploaded successfully:', data.Location);
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import java.nio.file.Paths;
+
+S3Client s3 = S3Client.create();
+
+s3.putObject(
+    PutObjectRequest.builder()
+        .bucket("my-bucket")
+        .key("uploaded-file.txt")
+        .build(),
+    Paths.get("localfile.txt")
+);
+
+System.out.println("File uploaded successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use IAM roles for AWS-hosted applications instead of hardcoding credentials.</li>
+        <li>For files larger than 5 GB, use multipart upload to improve reliability and performance.</li>
+        <li>Enable server-side encryption if the data is sensitive.</li>
+        <li>Handle exceptions and implement retries for network errors or throttling.</li>
+        <li>Consider using content-type metadata to make files downloadable or previewable correctly.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-delete-object" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Delete an Object in S3 via AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can programmatically delete objects from an S3 bucket using AWS SDKs. This can be done for individual files or multiple files at once.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+s3 = boto3.client('s3')
+bucket_name = 'my-bucket'
+key_name = 'file-to-delete.txt'
+
+s3.delete_object(Bucket=bucket_name, Key=key_name)
+print("Object deleted successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+s3.deleteObject({
+  Bucket: 'my-bucket',
+  Key: 'file-to-delete.txt'
+}, (err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else console.log('Object deleted successfully');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+
+S3Client s3 = S3Client.create();
+
+DeleteObjectRequest request = DeleteObjectRequest.builder()
+    .bucket("my-bucket")
+    .key("file-to-delete.txt")
+    .build();
+
+s3.deleteObject(request);
+System.out.println("Object deleted successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Ensure the user or role has proper <code>s3:DeleteObject</code> permissions.</li>
+        <li>Be cautious with deletion in versioned buckets; consider using <strong>MFA Delete</strong> to prevent accidental removal.</li>
+        <li>For bulk deletion, use <code>delete_objects</code> (Python) or <code>DeleteObjectsRequest</code> (Java) to remove multiple files efficiently.</li>
+        <li>Log deletion operations for auditing and recovery purposes.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-versioning-encryption" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Enable Versioning and Encryption on an S3 Bucket Programmatically
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can configure versioning and server-side encryption (SSE) on an S3 bucket programmatically using AWS SDKs. Versioning helps recover deleted or overwritten objects, while encryption protects data at rest.
+    </p>
+
+    <!-- Enable Versioning -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Enable Versioning</h3>
+
+      <!-- Python Example -->
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+s3 = boto3.client('s3')
+bucket_name = 'my-versioned-bucket'
+
+s3.put_bucket_versioning(
+    Bucket=bucket_name,
+    VersioningConfiguration={'Status': 'Enabled'}
+)
+print("Versioning enabled successfully")</code></pre>
+
+      <!-- Node.js Example -->
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto mt-2"><code>const AWS = require('aws-sdk');
+const s3 = new AWS.S3();
+
+s3.putBucketVersioning({
+  Bucket: 'my-versioned-bucket',
+  VersioningConfiguration: { Status: 'Enabled' }
+}, (err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else console.log('Versioning enabled successfully');
+});</code></pre>
+
+      <!-- Java Example -->
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto mt-2"><code>import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.PutBucketVersioningRequest;
+import software.amazon.awssdk.services.s3.model.VersioningConfiguration;
+
+S3Client s3 = S3Client.create();
+
+s3.putBucketVersioning(PutBucketVersioningRequest.builder()
+    .bucket("my-versioned-bucket")
+    .versioningConfiguration(VersioningConfiguration.builder()
+        .status("Enabled")
+        .build())
+    .build());
+
+System.out.println("Versioning enabled successfully");</code></pre>
+    </div>
+
+    <!-- Enable Encryption -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Enable Server-Side Encryption (SSE)</h3>
+
+      <!-- Python Example -->
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>s3.put_bucket_encryption(
+    Bucket=bucket_name,
+    ServerSideEncryptionConfiguration={
+        'Rules': [
+            {'ApplyServerSideEncryptionByDefault': {'SSEAlgorithm': 'AES256'}}
+        ]
+    }
+)
+print("SSE enabled successfully")</code></pre>
+
+      <!-- Node.js Example -->
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto mt-2"><code>s3.putBucketEncryption({
+  Bucket: 'my-encrypted-bucket',
+  ServerSideEncryptionConfiguration: {
+    Rules: [{ ApplyServerSideEncryptionByDefault: { SSEAlgorithm: 'AES256' } }]
+  }
+}, (err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else console.log('SSE enabled successfully');
+});</code></pre>
+
+      <!-- Java Example -->
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto mt-2"><code>import software.amazon.awssdk.services.s3.model.PutBucketEncryptionRequest;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryptionByDefault;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryptionRule;
+import software.amazon.awssdk.services.s3.model.ServerSideEncryptionConfiguration;
+
+s3.putBucketEncryption(PutBucketEncryptionRequest.builder()
+    .bucket("my-encrypted-bucket")
+    .serverSideEncryptionConfiguration(
+        ServerSideEncryptionConfiguration.builder()
+            .rules(ServerSideEncryptionRule.builder()
+                .applyServerSideEncryptionByDefault(
+                    ServerSideEncryptionByDefault.builder()
+                        .sseAlgorithm("AES256")
+                        .build())
+                .build())
+            .build())
+    .build());
+
+System.out.println("SSE enabled successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Enable versioning to protect against accidental deletion or overwrites.</li>
+        <li>Use SSE-KMS for sensitive data to leverage key management and auditing features.</li>
+        <li>Combine versioning with lifecycle rules to manage old versions efficiently.</li>
+        <li>Ensure IAM policies allow <code>s3:PutBucketVersioning</code> and <code>s3:PutEncryptionConfiguration</code> actions.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-presigned-url" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Generate a Pre-Signed URL Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      Pre-signed URLs allow you to grant temporary access to an S3 object without exposing your credentials. The URL expires after a specified time and can be used for download or upload operations.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+from botocore.client import Config
+
+s3 = boto3.client('s3', config=Config(signature_version='s3v4'))
+bucket_name = 'my-bucket'
+object_name = 'file.txt'
+
+# Generate pre-signed URL valid for 1 hour
+url = s3.generate_presigned_url(
+    ClientMethod='get_object',
+    Params={'Bucket': bucket_name, 'Key': object_name},
+    ExpiresIn=3600
+)
+
+print("Pre-signed URL:", url)</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const s3 = new AWS.S3({ signatureVersion: 'v4' });
+
+const params = {
+  Bucket: 'my-bucket',
+  Key: 'file.txt',
+  Expires: 3600 // 1 hour
+};
+
+const url = s3.getSignedUrl('getObject', params);
+console.log('Pre-signed URL:', url);</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import java.time.Duration;
+
+S3Presigner presigner = S3Presigner.create();
+
+GetObjectRequest getRequest = GetObjectRequest.builder()
+    .bucket("my-bucket")
+    .key("file.txt")
+    .build();
+
+GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+    .signatureDuration(Duration.ofHours(1))
+    .getObjectRequest(getRequest)
+    .build();
+
+String url = presigner.presignGetObject(presignRequest).url().toString();
+System.out.println("Pre-signed URL: " + url);</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Set an appropriate expiration time for temporary access.</li>
+        <li>Use HTTPS URLs to secure the data in transit.</li>
+        <li>Limit access via pre-signed URLs to only the required operation (GET or PUT).</li>
+        <li>Monitor usage and consider revoking URLs by updating object permissions if needed.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-list-ec2-instances" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to List All EC2 Instances in a Region Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs allow you to programmatically retrieve details of all EC2 instances in a specific region. You can filter instances by state, tags, or other attributes.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+ec2 = boto3.client('ec2', region_name='us-east-1')
+response = ec2.describe_instances()
+
+for reservation in response['Reservations']:
+    for instance in reservation['Instances']:
+        print(instance['InstanceId'], instance['State']['Name'])</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const ec2 = new AWS.EC2({ region: 'us-east-1' });
+
+ec2.describeInstances({}, (err, data) =&gt; {
+  if (err) console.log('Error', err);
+  else {
+    data.Reservations.forEach(reservation =&gt; {
+      reservation.Instances.forEach(instance =&gt; {
+        console.log(instance.InstanceId, instance.State.Name);
+      });
+    });
+  }
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.Reservation;
+import software.amazon.awssdk.services.ec2.model.Instance;
+
+Ec2Client ec2 = Ec2Client.create();
+
+DescribeInstancesResponse response = ec2.describeInstances();
+
+for (Reservation reservation : response.reservations()) {
+    for (Instance instance : reservation.instances()) {
+        System.out.println(instance.instanceId() + " " + instance.state().name());
+    }
+}</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use filters to reduce the amount of data returned if you have many instances.</li>
+        <li>Ensure your IAM role or user has <code>ec2:DescribeInstances</code> permissions.</li>
+        <li>Handle pagination for large number of instances using <code>NextToken</code> (Node.js/Python) or paginators (Java SDK).</li>
+        <li>Consider caching instance information if accessed frequently to reduce API calls.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-ec2-start-stop-terminate" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Start, Stop, or Terminate an EC2 Instance Programmatically
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs provide APIs to manage the lifecycle of EC2 instances. You can start, stop, or terminate instances by specifying their instance IDs.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+ec2 = boto3.client('ec2', region_name='us-east-1')
+instance_id = 'i-0123456789abcdef0'
+
+# Start instance
+ec2.start_instances(InstanceIds=[instance_id])
+print("Instance started")
+
+# Stop instance
+ec2.stop_instances(InstanceIds=[instance_id])
+print("Instance stopped")
+
+# Terminate instance
+ec2.terminate_instances(InstanceIds=[instance_id])
+print("Instance terminated")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const ec2 = new AWS.EC2({ region: 'us-east-1' });
+const instanceId = 'i-0123456789abcdef0';
+
+// Start instance
+ec2.startInstances({ InstanceIds: [instanceId] }, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Instance started');
+});
+
+// Stop instance
+ec2.stopInstances({ InstanceIds: [instanceId] }, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Instance stopped');
+});
+
+// Terminate instance
+ec2.terminateInstances({ InstanceIds: [instanceId] }, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Instance terminated');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.StartInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.StopInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.TerminateInstancesRequest;
+
+Ec2Client ec2 = Ec2Client.create();
+String instanceId = "i-0123456789abcdef0";
+
+// Start
+ec2.startInstances(StartInstancesRequest.builder().instanceIds(instanceId).build());
+System.out.println("Instance started");
+
+// Stop
+ec2.stopInstances(StopInstancesRequest.builder().instanceIds(instanceId).build());
+System.out.println("Instance stopped");
+
+// Terminate
+ec2.terminateInstances(TerminateInstancesRequest.builder().instanceIds(instanceId).build());
+System.out.println("Instance terminated");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Ensure your IAM role or user has the required permissions: <code>ec2:StartInstances</code>, <code>ec2:StopInstances</code>, <code>ec2:TerminateInstances</code>.</li>
+        <li>Double-check instance IDs before termination to avoid accidental deletion.</li>
+        <li>Consider tagging instances for easier management when performing batch operations.</li>
+        <li>Handle exceptions and API throttling for production environments.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section id="aws-sdk-describe-ec2-instance" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Describe Details of a Specific EC2 Instance Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can retrieve detailed information about a specific EC2 instance, including its state, type, public/private IP addresses, and tags, by using AWS SDKs.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+ec2 = boto3.client('ec2', region_name='us-east-1')
+instance_id = 'i-0123456789abcdef0'
+
+response = ec2.describe_instances(InstanceIds=[instance_id])
+instance = response['Reservations'][0]['Instances'][0]
+
+print("Instance ID:", instance['InstanceId'])
+print("State:", instance['State']['Name'])
+print("Instance Type:", instance['InstanceType'])
+print("Public IP:", instance.get('PublicIpAddress'))
+print("Private IP:", instance['PrivateIpAddress'])
+print("Tags:", instance.get('Tags'))</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const ec2 = new AWS.EC2({ region: 'us-east-1' });
+const instanceId = 'i-0123456789abcdef0';
+
+ec2.describeInstances({ InstanceIds: [instanceId] }, (err, data) =&gt; {
+  if (err) console.log(err);
+  else {
+    const instance = data.Reservations[0].Instances[0];
+    console.log('Instance ID:', instance.InstanceId);
+    console.log('State:', instance.State.Name);
+    console.log('Type:', instance.InstanceType);
+    console.log('Public IP:', instance.PublicIpAddress);
+    console.log('Private IP:', instance.PrivateIpAddress);
+    console.log('Tags:', instance.Tags);
+  }
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.DescribeInstancesRequest;
+import software.amazon.awssdk.services.ec2.model.DescribeInstancesResponse;
+import software.amazon.awssdk.services.ec2.model.Reservation;
+import software.amazon.awssdk.services.ec2.model.Instance;
+
+Ec2Client ec2 = Ec2Client.create();
+String instanceId = "i-0123456789abcdef0";
+
+DescribeInstancesResponse response = ec2.describeInstances(
+    DescribeInstancesRequest.builder().instanceIds(instanceId).build()
+);
+
+Instance instance = response.reservations().get(0).instances().get(0);
+System.out.println("Instance ID: " + instance.instanceId());
+System.out.println("State: " + instance.state().name());
+System.out.println("Type: " + instance.instanceType());
+System.out.println("Public IP: " + instance.publicIpAddress());
+System.out.println("Private IP: " + instance.privateIpAddress());
+System.out.println("Tags: " + instance.tags());</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Ensure the IAM role or user has <code>ec2:DescribeInstances</code> permissions.</li>
+        <li>Handle cases where the instance ID does not exist or has been terminated.</li>
+        <li>Use filters to narrow down instances when querying multiple IDs.</li>
+        <li>Consider caching frequently accessed instance details to reduce API calls.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-attach-iam-role-ec2" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Attach an IAM Role to an EC2 Instance via AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can attach an IAM role to an existing EC2 instance to grant it temporary credentials for accessing AWS services without embedding credentials. This is done by associating an IAM instance profile with the EC2 instance.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+ec2 = boto3.client('ec2', region_name='us-east-1')
+instance_id = 'i-0123456789abcdef0'
+iam_instance_profile = {'Name': 'MyEC2RoleProfile'}
+
+ec2.associate_iam_instance_profile(
+    IamInstanceProfile=iam_instance_profile,
+    InstanceId=instance_id
+)
+
+print("IAM role attached successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const ec2 = new AWS.EC2({ region: 'us-east-1' });
+
+const params = {
+  IamInstanceProfile: { Name: 'MyEC2RoleProfile' },
+  InstanceId: 'i-0123456789abcdef0'
+};
+
+ec2.associateIamInstanceProfile(params, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('IAM role attached successfully');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.ec2.Ec2Client;
+import software.amazon.awssdk.services.ec2.model.AssociateIamInstanceProfileRequest;
+import software.amazon.awssdk.services.ec2.model.IamInstanceProfileSpecification;
+
+Ec2Client ec2 = Ec2Client.create();
+
+IamInstanceProfileSpecification profileSpec = IamInstanceProfileSpecification.builder()
+    .name("MyEC2RoleProfile")
+    .build();
+
+AssociateIamInstanceProfileRequest request = AssociateIamInstanceProfileRequest.builder()
+    .instanceId("i-0123456789abcdef0")
+    .iamInstanceProfile(profileSpec)
+    .build();
+
+ec2.associateIamInstanceProfile(request);
+System.out.println("IAM role attached successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Ensure the IAM role has the necessary policies for the tasks your EC2 instance will perform.</li>
+        <li>Use instance profiles instead of directly embedding access keys.</li>
+        <li>You can attach only one IAM instance profile at a time to an EC2 instance.</li>
+        <li>Detach or replace IAM roles carefully to avoid interruptions for running applications.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-attach-policy-iam-user" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Attach a Policy to an IAM User Programmatically
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs allow you to attach managed or inline policies to an IAM user programmatically. Managed policies are reusable and maintained by AWS or your account, while inline policies are embedded directly in the user.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+iam = boto3.client('iam')
+user_name = 'MyUser'
+policy_arn = 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+
+# Attach managed policy
+iam.attach_user_policy(UserName=user_name, PolicyArn=policy_arn)
+print("Policy attached successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const iam = new AWS.IAM();
+
+const params = {
+  UserName: 'MyUser',
+  PolicyArn: 'arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess'
+};
+
+iam.attachUserPolicy(params, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Policy attached successfully');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.iam.IamClient;
+import software.amazon.awssdk.services.iam.model.AttachUserPolicyRequest;
+
+IamClient iam = IamClient.create();
+
+AttachUserPolicyRequest request = AttachUserPolicyRequest.builder()
+    .userName("MyUser")
+    .policyArn("arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess")
+    .build();
+
+iam.attachUserPolicy(request);
+System.out.println("Policy attached successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Prefer attaching managed policies over inline policies for better reuse and maintenance.</li>
+        <li>Follow the principle of least privilege – grant only the permissions required.</li>
+        <li>Audit attached policies regularly to ensure compliance with security standards.</li>
+        <li>Use IAM roles for applications running on AWS services instead of IAM users wherever possible.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-create-dynamodb-table" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Create a DynamoDB Table Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs allow you to create DynamoDB tables programmatically. You define the table name, primary key schema, attribute types, and provisioned throughput (or use on-demand mode) when creating the table.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+dynamodb = boto3.client('dynamodb', region_name='us-east-1')
+
+table_name = 'UsersTable'
+
+response = dynamodb.create_table(
+    TableName=table_name,
+    KeySchema=[
+        {'AttributeName': 'UserId', 'KeyType': 'HASH'}  # Partition key
+    ],
+    AttributeDefinitions=[
+        {'AttributeName': 'UserId', 'AttributeType': 'S'}
+    ],
+    BillingMode='PAY_PER_REQUEST'  # On-demand
+)
+
+print(f"Table {table_name} creation initiated")
+print("Status:", response['TableDescription']['TableStatus'])</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const dynamodb = new AWS.DynamoDB({ region: 'us-east-1' });
+
+const params = {
+  TableName: 'UsersTable',
+  KeySchema: [{ AttributeName: 'UserId', KeyType: 'HASH' }],
+  AttributeDefinitions: [{ AttributeName: 'UserId', AttributeType: 'S' }],
+  BillingMode: 'PAY_PER_REQUEST'
+};
+
+dynamodb.createTable(params, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Table creation initiated:', data.TableDescription.TableStatus);
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
+DynamoDbClient dynamoDb = DynamoDbClient.create();
+
+CreateTableRequest request = CreateTableRequest.builder()
+    .tableName("UsersTable")
+    .keySchema(KeySchemaElement.builder()
+        .attributeName("UserId")
+        .keyType(KeyType.HASH)
+        .build())
+    .attributeDefinitions(AttributeDefinition.builder()
+        .attributeName("UserId")
+        .attributeType(ScalarAttributeType.S)
+        .build())
+    .billingMode(BillingMode.PAY_PER_REQUEST)
+    .build();
+
+CreateTableResponse response = dynamoDb.createTable(request);
+System.out.println("Table creation initiated, status: " + response.tableDescription().tableStatus());</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use on-demand billing for unpredictable workloads to avoid provisioning errors.</li>
+        <li>Choose meaningful partition and sort keys for efficient querying.</li>
+        <li>Consider adding secondary indexes if you need alternate query patterns.</li>
+        <li>Enable encryption at rest and point-in-time recovery for production tables.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section id="aws-sdk-insert-dynamodb-item" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Insert an Item into a DynamoDB Table Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can add a new item to a DynamoDB table programmatically using the <code>PutItem</code> operation. Each item must include the primary key attributes defined for the table.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table = dynamodb.Table('UsersTable')
+
+item = {
+    'UserId': '123',
+    'Name': 'Alice',
+    'Email': 'alice@example.com'
+}
+
+table.put_item(Item=item)
+print("Item inserted successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({ region: 'us-east-1' });
+
+const params = {
+  TableName: 'UsersTable',
+  Item: {
+    UserId: '123',
+    Name: 'Alice',
+    Email: 'alice@example.com'
+  }
+};
+
+docClient.put(params, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Item inserted successfully');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import java.util.HashMap;
+import java.util.Map;
+
+DynamoDbClient dynamoDb = DynamoDbClient.create();
+
+Map<String, AttributeValue> item = new HashMap<>();
+item.put("UserId", AttributeValue.builder().s("123").build());
+item.put("Name", AttributeValue.builder().s("Alice").build());
+item.put("Email", AttributeValue.builder().s("alice@example.com").build());
+
+PutItemRequest request = PutItemRequest.builder()
+    .tableName("UsersTable")
+    .item(item)
+    .build();
+
+dynamoDb.putItem(request);
+System.out.println("Item inserted successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Always include the primary key attributes to avoid conditional errors.</li>
+        <li>Use <code>ConditionExpression</code> to prevent overwriting existing items if needed.</li>
+        <li>Batch writes can be used to insert multiple items efficiently.</li>
+        <li>Validate data types (S, N, BOOL, etc.) according to your table schema.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+<section id="aws-sdk-get-dynamodb-item" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Retrieve an Item by Key from DynamoDB Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can fetch a specific item from a DynamoDB table using its primary key with the <code>GetItem</code> operation. This retrieves only the item that matches the specified key.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table = dynamodb.Table('UsersTable')
+
+response = table.get_item(Key={'UserId': '123'})
+item = response.get('Item')
+
+if item:
+    print("Item retrieved:", item)
+else:
+    print("Item not found")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({ region: 'us-east-1' });
+
+const params = {
+  TableName: 'UsersTable',
+  Key: { UserId: '123' }
+};
+
+docClient.get(params, (err, data) =&gt; {
+  if (err) console.log(err);
+  else if (data.Item) console.log('Item retrieved:', data.Item);
+  else console.log('Item not found');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import java.util.HashMap;
+import java.util.Map;
+
+DynamoDbClient dynamoDb = DynamoDbClient.create();
+
+Map<String, AttributeValue> key = new HashMap<>();
+key.put("UserId", AttributeValue.builder().s("123").build());
+
+GetItemRequest request = GetItemRequest.builder()
+    .tableName("UsersTable")
+    .key(key)
+    .build();
+
+var response = dynamoDb.getItem(request);
+if (response.hasItem()) System.out.println("Item retrieved: " + response.item());
+else System.out.println("Item not found");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Always specify the primary key to ensure efficient retrieval.</li>
+        <li>Handle the case where the item may not exist to prevent errors.</li>
+        <li>Use <code>ProjectionExpression</code> to fetch only required attributes and reduce read throughput.</li>
+        <li>For multiple items, consider <code>BatchGetItem</code> to optimize API calls.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+   
+
+<section id="aws-sdk-update-delete-dynamodb-item" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Update or Delete an Item in DynamoDB Programmatically
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      AWS SDKs allow you to update attributes of an existing item using <code>UpdateItem</code> and remove an item completely using <code>DeleteItem</code>. Both operations require specifying the primary key of the item.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table = dynamodb.Table('UsersTable')
+
+# Update item
+table.update_item(
+    Key={'UserId': '123'},
+    UpdateExpression='SET Email = :email',
+    ExpressionAttributeValues={':email': 'newalice@example.com'}
+)
+print("Item updated successfully")
+
+# Delete item
+table.delete_item(Key={'UserId': '123'})
+print("Item deleted successfully")</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({ region: 'us-east-1' });
+
+const updateParams = {
+  TableName: 'UsersTable',
+  Key: { UserId: '123' },
+  UpdateExpression: 'SET Email = :email',
+  ExpressionAttributeValues: { ':email': 'newalice@example.com' }
+};
+
+docClient.update(updateParams, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Item updated successfully');
+});
+
+const deleteParams = {
+  TableName: 'UsersTable',
+  Key: { UserId: '123' }
+};
+
+docClient.delete(deleteParams, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Item deleted successfully');
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+DynamoDbClient dynamoDb = DynamoDbClient.create();
+
+// Update item
+Map<String, AttributeValue> key = new HashMap<>();
+key.put("UserId", AttributeValue.builder().s("123").build());
+
+Map<String, AttributeValue> expressionValues = new HashMap<>();
+expressionValues.put(":email", AttributeValue.builder().s("newalice@example.com").build());
+
+UpdateItemRequest updateRequest = UpdateItemRequest.builder()
+    .tableName("UsersTable")
+    .key(key)
+    .updateExpression("SET Email = :email")
+    .expressionAttributeValues(expressionValues)
+    .build();
+
+dynamoDb.updateItem(updateRequest);
+System.out.println("Item updated successfully");
+
+// Delete item
+DeleteItemRequest deleteRequest = DeleteItemRequest.builder()
+    .tableName("UsersTable")
+    .key(key)
+    .build();
+
+dynamoDb.deleteItem(deleteRequest);
+System.out.println("Item deleted successfully");</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use <code>ConditionExpression</code> to prevent unintended updates or deletions.</li>
+        <li>Always specify the primary key when updating or deleting items.</li>
+        <li>For bulk operations, consider <code>BatchWriteItem</code> to improve efficiency.</li>
+        <li>Validate data types and attribute names to avoid runtime errors.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+<section id="aws-sdk-scan-query-dynamodb" class="py-16 bg-gray-50">
+  <div class="max-w-6xl mx-auto px-6 lg:px-12">
+    <h2 class="text-3xl font-bold text-gray-900 mb-6">
+      How to Scan or Query a DynamoDB Table Using AWS SDK
+    </h2>
+
+    <p class="text-gray-700 mb-6">
+      You can retrieve multiple items from a DynamoDB table using either <code>Scan</code> or <code>Query</code> operations. <code>Query</code> is more efficient when filtering by primary key or secondary index, while <code>Scan</code> reads the entire table.
+    </p>
+
+    <!-- Python Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Python (Boto3)</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import boto3
+
+dynamodb = boto3.resource('dynamodb', region_name='us-east-1')
+table = dynamodb.Table('UsersTable')
+
+# Query example: get users with UserId starting with '123'
+response = table.query(
+    KeyConditionExpression=boto3.dynamodb.conditions.Key('UserId').eq('123')
+)
+items = response['Items']
+print("Query results:", items)
+
+# Scan example: get all users
+scan_response = table.scan()
+all_items = scan_response['Items']
+print("Scan results:", all_items)</code></pre>
+    </div>
+
+    <!-- Node.js Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Node.js</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({ region: 'us-east-1' });
+
+// Query example
+docClient.query({
+  TableName: 'UsersTable',
+  KeyConditionExpression: 'UserId = :uid',
+  ExpressionAttributeValues: { ':uid': '123' }
+}, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Query results:', data.Items);
+});
+
+// Scan example
+docClient.scan({ TableName: 'UsersTable' }, (err, data) =&gt; {
+  if (err) console.log(err);
+  else console.log('Scan results:', data.Items);
+});</code></pre>
+    </div>
+
+    <!-- Java Example -->
+    <div class="p-6 bg-white rounded-2xl border shadow-sm mb-6">
+      <h3 class="text-xl font-semibold text-gray-900 mb-4">Java</h3>
+      <pre class="bg-gray-900 text-green-200 text-sm rounded-lg p-4 overflow-x-auto"><code>import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+DynamoDbClient dynamoDb = DynamoDbClient.create();
+
+// Query example
+Map<String, AttributeValue> keyValues = new HashMap<>();
+keyValues.put(":uid", AttributeValue.builder().s("123").build());
+
+QueryRequest queryRequest = QueryRequest.builder()
+    .tableName("UsersTable")
+    .keyConditionExpression("UserId = :uid")
+    .expressionAttributeValues(keyValues)
+    .build();
+
+QueryResponse queryResponse = dynamoDb.query(queryRequest);
+System.out.println("Query results: " + queryResponse.items());
+
+// Scan example
+ScanRequest scanRequest = ScanRequest.builder()
+    .tableName("UsersTable")
+    .build();
+
+ScanResponse scanResponse = dynamoDb.scan(scanRequest);
+System.out.println("Scan results: " + scanResponse.items());</code></pre>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="p-6 bg-blue-50 border-l-4 border-blue-400 rounded-2xl shadow-sm">
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">Best Practices</h3>
+      <ul class="list-disc list-inside text-gray-700 space-y-1">
+        <li>Use <code>Query</code> whenever possible, as it is faster and consumes fewer read capacity units.</li>
+        <li>Apply <code>FilterExpression</code> to limit returned items without extra queries.</li>
+        <li>Use pagination for large result sets to avoid memory issues.</li>
+        <li>For scans on huge tables, consider using parallel scans or moving rarely accessed data to S3 for analytics.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-gray-100 text-gray-600 mt-10 p-6 text-center">
+    <p>&copy; 2025 My Tutorials. All rights reserved.</p>
+  </footer>
+
+ 
+</body>
+</html>
