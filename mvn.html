@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Primary Meta Tags -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maven Fundamentals - Build & Manage Java Projects Efficiently</title>
+    <meta name="description" content="Learn Maven fundamentals including POM, dependencies, lifecycle, plugins, and repositories. Complete guide for Java developers.">
+    <meta name="keywords" content="Maven, Java, Build Automation, POM, Dependencies, Maven Lifecycle, Maven Plugins, Java Project Management">
+    <meta name="author" content="Braj Bhushan Kumar">
+
+    <!-- Open Graph / Social Meta Tags -->
+    <meta property="og:title" content="Maven Fundamentals - Java Build & Dependency Management">
+    <meta property="og:description" content="Complete guide to Maven: structure, POM, lifecycle, dependencies, plugins, and repositories.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://yourwebsite.com/maven-fundamentals">
+    <meta property="og:image" content="https://yourwebsite.com/images/maven-logo.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans leading-relaxed">
+
+    
+
+    <!-- Hero Section -->
+    <section class="bg-indigo-100 py-12">
+        <div class="container mx-auto px-6 text-center">
+            <h2 class="text-4xl font-bold mb-4">Master Maven for Java Projects</h2>
+            <p class="text-xl text-gray-700 max-w-2xl mx-auto">
+                Learn everything about Maven: project structure, POM, dependency management, lifecycle, and plugins. Build Java projects efficiently with best practices.
+            </p>
+        </div>
+    </section>
+
+    <!-- Content Sections -->
+    <main class="container mx-auto px-6 py-12 space-y-16">
+
+        <!-- What is Maven -->
+        <section id="what-is-maven" class="bg-gray-50 py-12">
+  <div class="container mx-auto px-6 space-y-8">
+    
+    <!-- Section Header -->
+    <header class="text-center">
+      <h2 class="text-4xl font-bold text-indigo-700 mb-4">What is Maven?</h2>
+      <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+        Maven is a powerful build automation and project management tool for Java projects, helping developers manage dependencies, automate builds, and standardize project structure.
+      </p>
+    </header>
+
+    <!-- Detailed Explanation -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <p class="text-gray-700">
+        Maven simplifies the process of building and managing Java projects. It allows you to:
+      </p>
+
+      <ul class="list-disc pl-6 text-gray-700 space-y-2">
+        <li>Automate compilation, testing, and packaging of Java code</li>
+        <li>Manage external libraries and dependencies centrally</li>
+        <li>Generate project documentation and reports automatically</li>
+        <li>Enforce a standard project structure for all developers</li>
+        <li>Integrate easily with CI/CD pipelines and IDEs</li>
+      </ul>
+
+      <p class="text-gray-700">
+        By defining everything in a <strong>pom.xml</strong> file (Project Object Model), Maven ensures consistent builds across machines and environments.
+      </p>
+
+      <!-- Optional Visual -->
+      <div class="mt-4 text-center">
+        <img src="images/maven-logo.png" alt="Maven Logo" class="mx-auto w-32 h-32 object-contain">
+        <p class="text-gray-500 mt-2 text-sm">Maven automates Java project management</p>
+      </div>
+
+      <!-- Example -->
+      <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto mt-4">
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;groupId&gt;com.example&lt;/groupId&gt;
+    &lt;artifactId&gt;my-app&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+&lt;/project&gt;
+      </pre>
+
+      <p class="text-gray-700 mt-2">
+        This simple <strong>pom.xml</strong> declares a Java project with a group ID, artifact ID, and version. Maven uses it to manage the build lifecycle and dependencies automatically.
+      </p>
+    </article>
+  </div>
+</section>
+
+
+        <!-- Project Structure -->
+        <section id="project-structure">
+            <h3 class="text-3xl font-semibold mb-4 text-indigo-700">2. Maven Project Structure</h3>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+my-app/
+|-- pom.xml
+`-- src/
+    |-- main/
+    |   |-- java/
+    |   `-- resources/
+    `-- test/
+        |-- java/
+        `-- resources/
+            </pre>
+            <p class="text-gray-700 mt-2">Maven enforces a standard structure for consistency across Java projects.</p>
+        </section>
+
+        <!-- POM -->
+        <section id="pom-xml" class="bg-gray-50 py-12">
+  <div class="container mx-auto px-6 space-y-8">
+
+    <!-- Section Header -->
+    <header class="text-center">
+      <h2 class="text-4xl font-bold text-indigo-700 mb-4">Understanding pom.xml</h2>
+      <p class="text-lg text-gray-700 max-w-2xl mx-auto">
+        The <strong>pom.xml</strong> file is the heart of a Maven project. It defines project metadata, dependencies, plugins, and build configuration to automate and standardize your Java project builds.
+      </p>
+    </header>
+
+    <!-- Detailed Explanation -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <p class="text-gray-700">
+        Maven uses the <strong>pom.xml</strong> file (Project Object Model) to understand your project structure, required libraries, build instructions, and deployment configurations. It ensures that your builds are reproducible and consistent across environments.
+      </p>
+
+      <!-- Key Elements of pom.xml -->
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">Key Elements of pom.xml</h3>
+      <ul class="list-disc pl-6 text-gray-700 space-y-2">
+        <li><strong>modelVersion</strong> – Defines POM model version (usually 4.0.0).</li>
+        <li><strong>groupId</strong> – Unique identifier for your project group or organization.</li>
+        <li><strong>artifactId</strong> – Unique identifier for the project itself.</li>
+        <li><strong>version</strong> – Project version (e.g., 1.0-SNAPSHOT).</li>
+        <li><strong>dependencies</strong> – List of external libraries required by your project.</li>
+        <li><strong>build</strong> – Build plugins, configuration, and resource directories.</li>
+        <li><strong>repositories</strong> – Optional repositories to fetch dependencies from.</li>
+      </ul>
+
+      <!-- Example pom.xml -->
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">Example pom.xml</h3>
+      <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+&lt;project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.example&lt;/groupId&gt;
+    &lt;artifactId&gt;my-app&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.13.2&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.10.1&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;source&gt;17&lt;/source&gt;
+                    &lt;target&gt;17&lt;/target&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+      </pre>
+
+      <p class="text-gray-700 mt-2">
+        This <strong>pom.xml</strong> declares a simple Java project with JUnit as a test dependency and the Maven Compiler Plugin configured for Java 17.
+      </p>
+
+      <!-- Optional Visual -->
+      <div class="mt-4 text-center">
+        <img src="images/pom-diagram.png" alt="pom.xml Structure Diagram" class="mx-auto w-64 h-auto object-contain">
+        <p class="text-gray-500 mt-2 text-sm">pom.xml structure visualized for clarity</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+        <section id="pom-components-verbose" class="bg-gray-50 py-12">
+  <div class="container mx-auto px-6 space-y-12">
+
+    <!-- Section Header -->
+    <header class="text-center">
+      <h2 class="text-4xl font-bold text-indigo-700 mb-4">Comprehensive Guide to pom.xml Components</h2>
+      <p class="text-lg text-gray-700 max-w-3xl mx-auto">
+        In Maven, the <strong>pom.xml</strong> (Project Object Model) file is the blueprint of your project. It defines project metadata, dependencies, plugins, build configuration, profiles, and repositories. Understanding each component ensures you can manage Java projects efficiently and consistently.
+      </p>
+    </header>
+
+    <!-- modelVersion -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">1. &lt;modelVersion&gt;</h3>
+      <p class="text-gray-700">
+        The <code class="bg-gray-200 p-1 rounded">&lt;modelVersion&gt;</code> element specifies which POM model version your project is using. Currently, <code class="bg-gray-200 p-1 rounded">4.0.0</code> is the standard. This allows Maven to parse and interpret the POM correctly.
+      </p>
+    </article>
+
+    <!-- groupId -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2. &lt;groupId&gt;</h3>
+      <p class="text-gray-700">
+        <code class="bg-gray-200 p-1 rounded">&lt;groupId&gt;</code> identifies your project group or organization uniquely. This is typically in reverse domain notation, e.g., <code class="bg-gray-200 p-1 rounded">com.example</code>. It is used to prevent naming conflicts across projects and repositories.
+      </p>
+    </article>
+
+    <!-- artifactId -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">3. &lt;artifactId&gt;</h3>
+      <p class="text-gray-700">
+        The <code class="bg-gray-200 p-1 rounded">&lt;artifactId&gt;</code> specifies the unique name of your project. This name becomes the name of the resulting JAR, WAR, or other artifact. For example: <code class="bg-gray-200 p-1 rounded">my-app</code>.
+      </p>
+    </article>
+
+    <!-- version -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">4. &lt;version&gt;</h3>
+      <p class="text-gray-700">
+        The <code class="bg-gray-200 p-1 rounded">&lt;version&gt;</code> element defines the version of your project. Typical versions include:
+      </p>
+      <ul class="list-disc pl-6 text-gray-700 space-y-1">
+        <li><strong>1.0-SNAPSHOT</strong> – development version</li>
+        <li><strong>1.0</strong> – stable release version</li>
+        <li><strong>1.0.1</strong> – patch or update version</li>
+      </ul>
+      <p class="text-gray-700">
+        Maven uses the version to manage artifact updates and dependencies consistently.
+      </p>
+    </article>
+
+    <!-- packaging -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">5. &lt;packaging&gt;</h3>
+      <p class="text-gray-700">
+        This optional element defines the package type your project produces. Default is <code class="bg-gray-200 p-1 rounded">jar</code>. Other types include <code class="bg-gray-200 p-1 rounded">war</code>, <code class="bg-gray-200 p-1 rounded">pom</code> (for parent projects), and <code class="bg-gray-200 p-1 rounded">ear</code>.
+      </p>
+    </article>
+
+    <!-- properties -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">6. &lt;properties&gt;</h3>
+      <p class="text-gray-700">
+        The <code class="bg-gray-200 p-1 rounded">&lt;properties&gt;</code> element allows you to define variables that can be reused across the POM. This improves maintainability and avoids hardcoding versions.
+      </p>
+      <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+&lt;properties&gt;
+    &lt;maven.compiler.source&gt;17&lt;/maven.compiler.source&gt;
+    &lt;maven.compiler.target&gt;17&lt;/maven.compiler.target&gt;
+&lt;/properties&gt;
+      </pre>
+    </article>
+
+    <!-- dependencies -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">7. &lt;dependencies&gt;</h3>
+      <p class="text-gray-700">
+        Defines external libraries required by your project. Maven automatically downloads these from repositories. Each dependency includes:
+      </p>
+      <ul class="list-disc pl-6 text-gray-700 space-y-1">
+        <li><strong>groupId</strong> – library group</li>
+        <li><strong>artifactId</strong> – library name</li>
+        <li><strong>version</strong> – specific library version</li>
+        <li><strong>scope</strong> – compile, test, provided, or runtime</li>
+      </ul>
+      <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto mt-2">
+&lt;dependency&gt;
+    &lt;groupId&gt;junit&lt;/groupId&gt;
+    &lt;artifactId&gt;junit&lt;/artifactId&gt;
+    &lt;version&gt;4.13.2&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+      </pre>
+    </article>
+
+    <!-- dependencyManagement -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">8. &lt;dependencyManagement&gt;</h3>
+      <p class="text-gray-700">
+        Allows parent POMs to define versions and scope for dependencies used by child modules. Useful for multi-module projects to enforce consistent versions.
+      </p>
+    </article>
+
+    <!-- build -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">9. &lt;build&gt;</h3>
+      <p class="text-gray-700">
+        Contains configuration for compiling, testing, packaging, and other build steps. You can define:
+      </p>
+      <ul class="list-disc pl-6 text-gray-700 space-y-1">
+        <li>Plugins used in the build</li>
+        <li>Resource directories</li>
+        <li>Final artifact name</li>
+      </ul>
+      <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto mt-2">
+&lt;build&gt;
+    &lt;plugins&gt;
+        &lt;plugin&gt;
+            &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+            &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+            &lt;version&gt;3.10.1&lt;/version&gt;
+            &lt;configuration&gt;
+                &lt;source&gt;17&lt;/source&gt;
+                &lt;target&gt;17&lt;/target&gt;
+            &lt;/configuration&gt;
+        &lt;/plugin&gt;
+    &lt;/plugins&gt;
+&lt;/build&gt;
+      </pre>
+    </article>
+
+    <!-- profiles -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">10. &lt;profiles&gt;</h3>
+      <p class="text-gray-700">
+        Profiles allow you to customize the build for different environments, e.g., development, testing, production. You can activate profiles via command line or automatically based on properties.
+      </p>
+    </article>
+
+    <!-- repositories -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">11. &lt;repositories&gt;</h3>
+      <p class="text-gray-700">
+        Optional repositories specify locations where Maven should search for dependencies. By default, Maven uses the central repository.
+      </p>
+      <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto mt-2">
+&lt;repositories&gt;
+    &lt;repository&gt;
+        &lt;id&gt;company-repo&lt;/id&gt;
+        &lt;url&gt;https://repo.company.com/maven2&lt;/url&gt;
+    &lt;/repository&gt;
+&lt;/repositories&gt;
+      </pre>
+    </article>
+
+  </div>
+</section>
+
+
+
+
+        <!-- Maven Lifecycle -->
+        <section id="maven-lifecycle" class="bg-gray-50 py-12">
+  <div class="container mx-auto px-6 space-y-12">
+
+    <!-- Section Header -->
+    <header class="text-center">
+      <h2 class="text-4xl font-bold text-indigo-700 mb-4">Understanding Maven Lifecycle</h2>
+      <p class="text-lg text-gray-700 max-w-3xl mx-auto">
+        Maven lifecycle defines the sequence of phases that take your project from source code to a deployable artifact. Each phase executes specific tasks automatically.
+      </p>
+    </header>
+
+    <!-- Overview -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">1. What is a Maven Lifecycle?</h3>
+      <p class="text-gray-700">
+        In Maven, a <strong>lifecycle</strong> is a predefined sequence of phases that execute tasks such as validation, compilation, testing, packaging, installation, and deployment.
+        Maven has three built-in lifecycles:
+      </p>
+      <ul class="list-disc pl-6 text-gray-700 space-y-1">
+        <li><strong>default (build) lifecycle:</strong> handles project build, testing, packaging, and deployment.</li>
+        <li><strong>clean lifecycle:</strong> handles cleaning the project directory (removing previous build artifacts).</li>
+        <li><strong>site lifecycle:</strong> generates project documentation and reports.</li>
+      </ul>
+    </article>
+
+    <!-- Default Lifecycle Phases -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">2. Default Lifecycle Phases</h3>
+      <p class="text-gray-700">
+        The default lifecycle consists of several phases executed in order. Some of the key phases include:
+      </p>
+      <ul class="list-decimal pl-6 text-gray-700 space-y-2">
+        <li><strong>validate:</strong> Validates the project structure and checks for required information.</li>
+        <li><strong>compile:</strong> Compiles the source code of the project.</li>
+        <li><strong>test:</strong> Runs unit tests using frameworks like JUnit.</li>
+        <li><strong>package:</strong> Packages the compiled code into JAR/WAR/EAR artifacts.</li>
+        <li><strong>verify:</strong> Performs any additional checks to verify the package is valid and meets quality criteria.</li>
+        <li><strong>install:</strong> Installs the package into the local Maven repository for use as a dependency in other projects.</li>
+        <li><strong>deploy:</strong> Copies the final package to the remote repository for sharing with other developers and projects.</li>
+      </ul>
+      <p class="text-gray-700 mt-2">
+        Example command to execute a lifecycle phase: <code class="bg-gray-200 p-1 rounded">mvn clean install</code> – which cleans, compiles, tests, packages, and installs the project in one go.
+      </p>
+    </article>
+
+    <!-- Clean Lifecycle -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">3. Clean Lifecycle</h3>
+      <p class="text-gray-700">
+        The clean lifecycle is used to remove artifacts created by previous builds. It has the following phases:
+      </p>
+      <ul class="list-decimal pl-6 text-gray-700 space-y-1">
+        <li><strong>pre-clean:</strong> Executes tasks before cleaning.</li>
+        <li><strong>clean:</strong> Deletes the <code class="bg-gray-200 p-1 rounded">target</code> directory.</li>
+        <li><strong>post-clean:</strong> Executes tasks after cleaning.</li>
+      </ul>
+      <p class="text-gray-700 mt-2">
+        Example command: <code class="bg-gray-200 p-1 rounded">mvn clean</code>
+      </p>
+    </article>
+
+    <!-- Site Lifecycle -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">4. Site Lifecycle</h3>
+      <p class="text-gray-700">
+        The site lifecycle generates project documentation and reports. Phases include:
+      </p>
+      <ul class="list-decimal pl-6 text-gray-700 space-y-1">
+        <li><strong>pre-site:</strong> Tasks before generating the site.</li>
+        <li><strong>site:</strong> Generates the project site documentation.</li>
+        <li><strong>post-site:</strong> Tasks after site generation.</li>
+        <li><strong>site-deploy:</strong> Deploys the generated site to a web server.</li>
+      </ul>
+      <p class="text-gray-700 mt-2">
+        Example command: <code class="bg-gray-200 p-1 rounded">mvn site</code>
+      </p>
+    </article>
+
+    <!-- Lifecycle Diagram Placeholder -->
+    <article class="bg-white shadow rounded p-6 space-y-4 text-center">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">5. Maven Lifecycle Diagram</h3>
+      <img src="images/maven-lifecycle.png" alt="Maven Lifecycle Diagram" class="mx-auto w-full max-w-lg h-auto object-contain">
+      <p class="text-gray-500 mt-2 text-sm">Visual representation of Maven lifecycles and their phases.</p>
+    </article>
+
+    <!-- Summary -->
+    <article class="bg-white shadow rounded p-6 space-y-4">
+      <h3 class="text-2xl font-semibold text-indigo-600 mb-2">6. Summary</h3>
+      <p class="text-gray-700">
+        Maven lifecycles provide a structured way to automate the build, clean, and documentation process. Understanding the phases ensures consistent and reproducible builds, simplifies dependency management, and integrates smoothly with CI/CD pipelines.
+      </p>
+    </article>
+
+  </div>
+</section>
+
+
+        <!-- Dependencies -->
+        <section id="dependencies">
+            <h3 class="text-3xl font-semibold mb-4 text-indigo-700">5. Maven Dependencies</h3>
+            <p class="text-gray-700 mb-4">
+                Dependencies are external libraries your project requires. Maven downloads them automatically from repositories.
+            </p>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+&lt;dependency&gt;
+    &lt;groupId&gt;junit&lt;/groupId&gt;
+    &lt;artifactId&gt;junit&lt;/artifactId&gt;
+    &lt;version&gt;4.13.2&lt;/version&gt;
+    &lt;scope&gt;test&lt;/scope&gt;
+&lt;/dependency&gt;
+            </pre>
+            <p class="text-gray-700 mt-2">Common scopes: <strong>compile</strong>, <strong>test</strong>, <strong>provided</strong>, <strong>runtime</strong></p>
+        </section>
+
+        <!-- Plugins -->
+        <section id="plugins">
+            <h3 class="text-3xl font-semibold mb-4 text-indigo-700">6. Maven Plugins</h3>
+            <p class="text-gray-700 mb-4">
+                Plugins extend Maven functionality, e.g., compilation, testing, packaging.
+            </p>
+            <pre class="bg-gray-100 p-4 rounded text-sm overflow-x-auto">
+&lt;plugin&gt;
+    &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+    &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+    &lt;version&gt;3.10.1&lt;/version&gt;
+    &lt;configuration&gt;
+        &lt;source&gt;17&lt;/source&gt;
+        &lt;target&gt;17&lt;/target&gt;
+    &lt;/configuration&gt;
+&lt;/plugin&gt;
+            </pre>
+        </section>
+
+        <!-- Repositories -->
+        <section id="repositories">
+            <h3 class="text-3xl font-semibold mb-4 text-indigo-700">7. Maven Repositories</h3>
+            <ul class="list-disc pl-6 text-gray-700">
+                <li>Local Repository - on your machine: <code class="bg-gray-200 p-1 rounded">~/.m2/repository</code></li>
+                <li>Central Repository - Maven Central, public</li>
+                <li>Remote Repository - corporate/private libraries</li>
+            </ul>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-indigo-700 text-white py-6 mt-12">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; 2025 Maven Guide. All Rights Reserved.</p>
+            <p>Developed by Braj Bhushan Kumar</p>
+        </div>
+    </footer>
+
+</body>
+</html>
